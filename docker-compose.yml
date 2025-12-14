@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:17.5
+    container_name: rtk-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=rtk_db
+      - POSTGRES_USER=rtk_user
+      - POSTGRES_PASSWORD=rtk_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rtk_user -d rtk_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  pgdata:
