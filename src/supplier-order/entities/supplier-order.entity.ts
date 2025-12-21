@@ -1,10 +1,12 @@
 import { CustomerOffer } from 'src/customer-offer/entities/customer-offer.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Supplier } from '../../supplier/entities/supplier.entity';
 import { User } from '../../user/entities/user.entity';
@@ -109,12 +111,18 @@ export class SupplierOrder {
 
   @ManyToOne(() => Supplier, (supplier) => supplier.id)
   @JoinColumn({ name: 'supplier_id' })
-  readonly productProcurementRequest?: Readonly<Supplier>;
+  readonly supplier?: Readonly<Supplier>;
 
   @Column({ name: 'assigned_user_id' })
   assignedUserId: number;
 
   @ManyToOne(() => User, (user) => user.id)
-  @JoinColumn({ name: 'assigned_seller_id' })
+  @JoinColumn({ name: 'assigned_user_id' })
   readonly assignedUser?: Readonly<User>;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

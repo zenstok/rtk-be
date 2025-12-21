@@ -3,10 +3,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { PriceAnalysis } from './price-analysis.entity';
 import { Supplier } from '../../supplier/entities/supplier.entity';
+import { PriceAnalysisRow } from './price-analysis-row.entity';
 
 @Entity({ name: 'price_analysis_supplier_groups' })
 export class PriceAnalysisSupplierGroup {
@@ -36,6 +38,6 @@ export class PriceAnalysisSupplierGroup {
   @Column({ name: 'financial_cost', type: 'real' })
   financialCost: number;
 
-  @Column({ name: 'supplier_currency_exchange_rate', type: 'real' })
-  supplierCurrencyToRonExchangeRate: number;
+  @OneToMany(() => PriceAnalysisRow, (row) => row.id)
+  priceAnalysisRows: PriceAnalysisRow[];
 }

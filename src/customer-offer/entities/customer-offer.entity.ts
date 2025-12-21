@@ -37,6 +37,9 @@ export class CustomerOffer {
   @Column({ type: 'enum', enum: CustomerOfferStatus })
   status: CustomerOfferStatus;
 
+  @Column({ name: 'confirmed_customer_order_receiving_method' })
+  confirmedCustomerOrderReceivingMethod: string; // PO standard Client/PO standard RTK/Email/Verbal
+
   @Column({ name: 'confirmed_customer_order_number', nullable: true })
   confirmedCustomerOrderNumber: string;
 

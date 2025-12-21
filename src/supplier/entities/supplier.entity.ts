@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { SupplierContactPerson } from './supplier-contact-person.entity';
 
 @Entity({ name: 'suppliers' })
 export class Supplier {
@@ -23,36 +30,13 @@ export class Supplier {
   @Column()
   currency: string;
 
-  @Column({ name: 'contact_person_first_name' })
-  contactPersonFirstName: string;
-
-  @Column({ name: 'contact_person_last_name' })
-  contactPersonLastName: string;
-
-  @Column({ name: 'contact_person_position' })
-  contactPersonPosition: string;
-
-  @Column({ name: 'contact_person_email' })
-  contactPersonEmail: string;
-
-  @Column({ name: 'contact_person_phone' })
-  contactPersonPhone: string;
-
   @Column({ name: 'pick_up_address' })
   pickUpAddress: string;
 
-  @Column({ name: 'pick_up_contact_person_first_name' })
-  pickUpContactPersonFirstName: string;
+  @Column({ name: 'supplier_contact_person_id' })
+  pickupContactPersonId: number;
 
-  @Column({ name: 'pick_up_contact_person_last_name' })
-  pickUpContactPersonLastName: string;
-
-  @Column({ name: 'pick_up_contact_person_position' })
-  pickUpContactPersonPosition: string;
-
-  @Column({ name: 'pick_up_contact_person_email' })
-  pickUpContactPersonEmail: string;
-
-  @Column({ name: 'pick_up_contact_person_phone' })
-  pickUpContactPersonPhone: string;
+  @ManyToOne(() => SupplierContactPerson, (person) => person.id)
+  @JoinColumn({ name: 'supplier_contact_person_id' })
+  readonly pickupContactPerson?: Readonly<SupplierContactPerson>;
 }

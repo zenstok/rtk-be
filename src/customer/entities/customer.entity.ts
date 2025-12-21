@@ -17,21 +17,6 @@ export class Customer {
   @Column({ name: 'trade_register_number', unique: true })
   tradeRegisterNumber: string;
 
-  @Column({ name: 'contact_person_first_name' })
-  contactPersonFirstName: string;
-
-  @Column({ name: 'contact_person_last_name' })
-  contactPersonLastName: string;
-
-  @Column({ name: 'contact_person_position' })
-  contactPersonPosition: string;
-
-  @Column({ name: 'contact_person_email' })
-  contactPersonEmail: string;
-
-  @Column({ name: 'contact_person_phone' })
-  contactPersonPhone: string;
-
   @Column()
   domain: string;
 
