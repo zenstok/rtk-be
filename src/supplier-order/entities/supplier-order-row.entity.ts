@@ -32,8 +32,4 @@ export class SupplierOrderRow {
 
   @Column({ name: 'ordered_quantity', type: 'real' })
   orderedQuantity: number;
-
-  @Column({ name: 'reserved_stock_quantity', type: 'real' })
-  reservedStockQuantity: number; // TODO asta ar trebui mutat la oferta (cand faci o comanda furnizor si alegi ca rezervi din stoc 3/5 produse, sistemul te oblica sa alegi SN-urile produselor pe care le rezervi si dupa in view one oferta sa poti sa faci iesiri stoc ptr aceste SN-uri)
-  // todo la stock entry trebuie rework sa introduci SN-ul cand ti se face livrarea efectiva
 }

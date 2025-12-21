@@ -13,6 +13,9 @@ export class StockEntry {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ name: 'serial_number', unique: true, nullable: true }) // nullable until product is shipped -> when you ship it you need to introduce the sn
+  serialNumber: string;
+
   @Column({ name: 'stock_entry_date', type: 'date' })
   stockEntryDate: Date;
 
@@ -21,14 +24,14 @@ export class StockEntry {
 
   @ManyToOne(() => SupplierOrderRow, (sor) => sor.id)
   @JoinColumn({ name: 'supplier_order_row_id' })
-  readonly supplierOrderRow?: Readonly<SupplierOrderRow>;
+  readonly supplierOrderRow?: Readonly<SupplierOrderRow>; // supplier order row can have at most the ordered quantity as stock entries (the app should enforce this) .e.g ordered quantity is 3 => there are 3 stock entries associated with it
 
-  // @Column({ name: 'customer_offer_id', nullable: true }) // you can have a stock entry associated with an offer (+reservedStock) THIS IS NOT NEEDED BECAUSE YOU XAN TAKE IT FROM supplier order row -> supplier order -> customer offer
-  // customerOfferId: number;
-  //
-  // @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
-  // @JoinColumn({ name: 'customer_offer_id' })
-  // readonly customerOffer?: Readonly<CustomerOffer>;
+  @Column({ name: 'customer_offer_id', nullable: true })
+  customerOfferId: number;
+
+  @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
+  @JoinColumn({ name: 'customer_offer_id' })
+  readonly customerOffer?: Readonly<CustomerOffer>;
 
   @Column({ name: 'shipment_date', type: 'date' })
   shipmentDate: Date;
@@ -38,9 +41,6 @@ export class StockEntry {
 
   @Column({ default: false })
   shipped: boolean; // only if marked as true the product is considered entered in stock
-
-  @Column()
-  quantity: number; // this quantity cannot exceed orderedQuantity from supplier order row
 
   @Column({ name: 'supplier_invoice_date', type: 'date' })
   supplierInvoiceDate: Date;
@@ -56,9 +56,6 @@ export class StockEntry {
 
   @Column({ name: 'supplier_currency_to_ron_exchange_rate', type: 'real' })
   supplierCurrencyToRonExchangeRate: number;
-
-  // @Column() // astea sunt serial numbers
-  // sns: string;
 
   @Column()
   destination: string;

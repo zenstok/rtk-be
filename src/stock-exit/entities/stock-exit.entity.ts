@@ -3,27 +3,27 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { SupplierOrder } from '../../supplier-order/entities/supplier-order.entity';
 import { CustomerOffer } from '../../customer-offer/entities/customer-offer.entity';
 import { Customer } from '../../customer/entities/customer.entity';
+import { StockEntry } from '../../stock-entry/entities/stock-entry.entity';
 
 @Entity({ name: 'stock_exits' })
 export class StockExit {
   @PrimaryGeneratedColumn()
   id: number;
-  //
-  // @Column({ name: 'supplier_order_id' })
-  // supplierOrderId: number;
-  //
-  // @ManyToOne(() => SupplierOrder, (supplierOrder) => supplierOrder.id)
-  // @JoinColumn({ name: 'supplier_order_id' })
-  // readonly supplierOrder?: Readonly<SupplierOrder>;
 
-  // poti face iesire stoc doar din ecranul unei comenzi furnizor
-  @Column({ name: 'customer_offer_id', nullable: true }) // you can have a stock entry associated with an offer (-reservedStock)
-  customerOfferId: number;
+  @Column({ name: 'stock_entry_id', unique: true })
+  stockEntryId: number;
+
+  @OneToOne(() => StockEntry, (stockEntry) => stockEntry.id)
+  @JoinColumn({ name: 'stock_entry_id' })
+  readonly stockEntry?: Readonly<StockEntry>;
+
+  @Column({ name: 'customer_offer_id', nullable: true })
+  customerOfferId?: number;
 
   @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
   @JoinColumn({ name: 'customer_offer_id' })
@@ -53,9 +53,6 @@ export class StockExit {
 
   @Column({ name: 'destination_country' })
   destinationCountry: string;
-
-  @Column({ name: 'product_serial_number' })
-  productSerialNumber: string;
 
   @Column({ name: 'product_localization' })
   productLocalization: string; // la rtk/la client/nespecificat (Se fac statistici sa vezi cate sunt la rtk, cate la client etc)

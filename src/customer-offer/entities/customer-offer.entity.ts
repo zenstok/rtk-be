@@ -4,12 +4,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Customer } from 'src/customer/entities/customer.entity';
 import { PriceAnalysis } from 'src/price-analysis/entities/price-analysis.entity';
 import { File } from '../../file/entities/file.entity';
+import { StockEntry } from '../../stock-entry/entities/stock-entry.entity';
 
 export enum CustomerOfferStatus {
   IN_PROGRESS = 'IN_PROGRESS',
@@ -64,4 +66,7 @@ export class CustomerOffer {
   @ManyToOne(() => File, (file) => file.id)
   @JoinColumn({ name: 'customer_order_file_id' })
   readonly customerOrderFile?: Readonly<File>;
+
+  @OneToMany(() => StockEntry, (stockEntry) => stockEntry.id)
+  readonly reservedStockEntries?: Readonly<StockEntry>; // (cand faci o comanda furnizor si alegi ca rezervi din stoc 3/5 produse, sistemul te oblica sa alegi SN-urile produselor pe care le rezervi si dupa in view one oferta sa poti sa faci iesiri stoc ptr aceste SN-uri)
 }
