@@ -7,7 +7,7 @@ import {
   Unique,
 } from 'typeorm';
 import { Supplier } from '../../supplier/entities/supplier.entity';
-import { Product } from 'src/product/entities/product.entity';
+import { Product } from 'src/modules/product/entities/product.entity';
 
 @Entity({ name: 'suppliers_product_catalog' })
 @Unique(['supplierId', 'productId'])

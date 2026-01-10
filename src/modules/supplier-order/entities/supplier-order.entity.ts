@@ -1,4 +1,4 @@
-import { CustomerOffer } from 'src/customer-offer/entities/customer-offer.entity';
+import { CustomerOffer } from 'src/modules/customer-offer/entities/customer-offer.entity';
 import {
   Column,
   CreateDateColumn,

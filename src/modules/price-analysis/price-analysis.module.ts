@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PriceAnalysis } from './entities/price-analysis.entity';
 import { PriceAnalysisRow } from './entities/price-analysis-row.entity';
 import { PriceAnalysisSupplierGroup } from './entities/price-analysis-supplier-group.entity';
+import { PriceAnalysisRepository } from './repositories/price-analysis.repository';
+import { BnrApiModule } from '../bnr-api/bnr-api.module';
 
 @Module({
   imports: [
@@ -13,8 +15,9 @@ import { PriceAnalysisSupplierGroup } from './entities/price-analysis-supplier-g
       PriceAnalysisSupplierGroup,
       PriceAnalysisRow,
     ]),
+    BnrApiModule,
   ],
   controllers: [PriceAnalysisController],
-  providers: [PriceAnalysisService],
+  providers: [PriceAnalysisService, PriceAnalysisRepository],
 })
 export class PriceAnalysisModule {}

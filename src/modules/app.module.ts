@@ -14,6 +14,8 @@ import { SupplierOrderModule } from './supplier-order/supplier-order.module';
 import { StockEntryModule } from './stock-entry/stock-entry.module';
 import { StockExitModule } from './stock-exit/stock-exit.module';
 import { FileModule } from './file/file.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { BnrApiModule } from './bnr-api/bnr-api.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { FileModule } from './file/file.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    ScheduleModule.forRoot(),
+    BnrApiModule,
     SupplierModule,
     UserModule,
     ProductModule,

@@ -1,15 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PriceAnalysisService } from './price-analysis.service';
 import { CreatePriceAnalysisDto } from './dto/create-price-analysis.dto';
 import { UpdatePriceAnalysisDto } from './dto/update-price-analysis.dto';
 
+// POST create
+// POST duplicate
+// PATCH edit
+// DELETE delete
+
+// POST add supplier group
+// PATCH supplier group
+// DELETE supplier group
+
+// POST add row
+// PATCH row
+// DELETE row
 @Controller('price-analysis')
 export class PriceAnalysisController {
   constructor(private readonly priceAnalysisService: PriceAnalysisService) {}
 
   @Post()
-  create(@Body() createPriceAnalysisDto: CreatePriceAnalysisDto) {
-    return this.priceAnalysisService.create(createPriceAnalysisDto);
+  create(@Body() dto: CreatePriceAnalysisDto) {
+    return this.priceAnalysisService.create(dto);
   }
 
   @Get()
@@ -23,7 +43,10 @@ export class PriceAnalysisController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePriceAnalysisDto: UpdatePriceAnalysisDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updatePriceAnalysisDto: UpdatePriceAnalysisDto,
+  ) {
     return this.priceAnalysisService.update(+id, updatePriceAnalysisDto);
   }
 

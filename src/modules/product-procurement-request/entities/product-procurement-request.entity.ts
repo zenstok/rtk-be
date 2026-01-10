@@ -7,8 +7,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from 'src/user/entities/user.entity';
-import { Customer } from 'src/customer/entities/customer.entity';
+import { User } from 'src/modules/user/entities/user.entity';
+import { Customer } from 'src/modules/customer/entities/customer.entity';
 import { CustomerContactPerson } from '../../customer/entities/customer-contact-person.entity';
 
 export enum ProductProcurementRequestStatus {

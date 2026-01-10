@@ -1,4 +1,4 @@
-import { ProductProcurementRequest } from 'src/product-procurement-request/entities/product-procurement-request.entity';
+import { ProductProcurementRequest } from 'src/modules/product-procurement-request/entities/product-procurement-request.entity';
 import {
   Column,
   CreateDateColumn,
@@ -24,7 +24,7 @@ export class PriceAnalysis {
   //   return this.ronCustomerBudget / this.eurToRonExchangeRate;
   // }
 
-  @Column({ name: 'project_discount', type: 'real' })
+  @Column({ name: 'project_discount', type: 'real', default: 0 })
   projectDiscount: number;
 
   @Column({ name: 'vat_rate', type: 'real', default: 21 })

@@ -8,8 +8,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Customer } from 'src/customer/entities/customer.entity';
-import { PriceAnalysis } from 'src/price-analysis/entities/price-analysis.entity';
+import { Customer } from 'src/modules/customer/entities/customer.entity';
+import { PriceAnalysis } from 'src/modules/price-analysis/entities/price-analysis.entity';
 import { File } from '../../file/entities/file.entity';
 import { StockEntry } from '../../stock-entry/entities/stock-entry.entity';
 
