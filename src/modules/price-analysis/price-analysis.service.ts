@@ -1,21 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePriceAnalysisDto } from './dto/create-price-analysis.dto';
 import { UpdatePriceAnalysisDto } from './dto/update-price-analysis.dto';
 import { PriceAnalysisRepository } from './repositories/price-analysis.repository';
 import { BnrApiService } from '../bnr-api/bnr-api.service';
-
-// POST create
-// POST duplicate
-// PATCH edit
-// DELETE delete
-
-// POST add supplier group
-// PATCH supplier group
-// DELETE supplier group
-
-// POST add row
-// PATCH row
-// DELETE row
+import { PriceAnalysis } from './entities/price-analysis.entity';
+import { DeepPartial } from 'typeorm';
+import { FindDto } from '../../utils/dtos/find.dto';
 
 @Injectable()
 export class PriceAnalysisService {
@@ -36,23 +26,80 @@ export class PriceAnalysisService {
     });
   }
 
-  duplicate() {
-    //duplicate all supplier groups and rows
+  async duplicate(id: number) {
+    const priceAnalysis = (await this.priceAnalysisRepository.findOne({
+      relations: { priceAnalysisSupplierGroups: { priceAnalysisRows: true } },
+    })) as DeepPartial<PriceAnalysis> | null;
+    if (!priceAnalysis) {
+      throw new NotFoundException('Price analysis not found.');
+    }
+
+    delete priceAnalysis.id;
+    priceAnalysis.priceAnalysisSupplierGroups?.forEach((group) => {
+      delete group.id;
+      group.priceAnalysisRows?.forEach((row) => delete row.id);
+    });
+
+    const entity = await this.priceAnalysisRepository.save(priceAnalysis);
+
+    return {
+      message: 'Price analysis duplicated successfully.',
+      duplicateId: entity.id,
+    };
   }
 
-  findAll() {
-    return `This action returns all priceAnalysis`;
+  async findAll(dto: FindDto) {
+    const [results, total] = await this.priceAnalysisRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: dto.offset,
+      take: dto.limit > 0 ? dto.limit : undefined,
+    });
+
+    return { results, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} priceAnalysis`;
+  async findOne(id: number) {
+    if (!(await this.priceAnalysisRepository.existsBy({ id }))) {
+      throw new NotFoundException('Price analysis not found.');
+    }
+
+    return this.priceAnalysisRepository.findOne({
+      relations: {
+        priceAnalysisSupplierGroups: {
+          supplier: true,
+          priceAnalysisRows: { suppliersProductCatalog: { product: true } },
+        },
+      },
+    });
   }
 
-  update(id: number, updatePriceAnalysisDto: UpdatePriceAnalysisDto) {
-    return `This action updates a #${id} priceAnalysis`;
+  async update(id: number, dto: UpdatePriceAnalysisDto) {
+    if (!(await this.priceAnalysisRepository.existsBy({ id }))) {
+      throw new NotFoundException('Price analysis not found.');
+    }
+    await this.priceAnalysisRepository.update({ id }, dto);
+
+    return { message: 'Price analysis updated successfully.' };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} priceAnalysis`;
+  async delete(id: number) {
+    if (!(await this.priceAnalysisRepository.existsBy({ id }))) {
+      throw new NotFoundException('Price analysis not found.');
+    }
+    await this.priceAnalysisRepository.delete({ id });
+
+    return { message: 'Price analysis deleted successfully.' };
   }
+
+  createSupplierGroup(priceAnalysisId: number, dto: unknown) {}
+
+  updateSupplierGroup(groupId: number, dto: unknown) {}
+
+  deleteSupplierGroup(groupId: number) {}
+
+  createRow(groupId: number, dto: unknown) {}
+
+  updateRow(groupId: number, dto: unknown) {}
+
+  deleteRow(groupId: number, dto: unknown) {}
 }
