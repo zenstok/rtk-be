@@ -4,20 +4,23 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SupplierOrderRow } from '../../supplier-order/entities/supplier-order-row.entity';
+import { File } from '../../file/entities/file.entity';
+import { StockEntrySerialNumber } from './stock-entry-serial-number.entity';
 
 @Entity({ name: 'stock_entries' })
 export class StockEntry {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'serial_number', unique: true, nullable: true }) // nullable until product is shipped -> when you ship it you need to introduce the sn
-  serialNumber: string;
+  @Column({ name: 'estimated_shipment_date', type: 'date' })
+  estimatedShipmentDate: Date;
 
-  @Column({ name: 'stock_entry_date', type: 'date' })
-  stockEntryDate: Date;
+  @Column({ name: 'shipment_date', type: 'date', nullable: true })
+  shipmentDate?: Date; // when this is set, it implies stock entry rows are created
 
   @Column({ name: 'supplier_order_row_id' })
   supplierOrderRowId: number;
@@ -33,36 +36,58 @@ export class StockEntry {
   @JoinColumn({ name: 'customer_offer_id' })
   readonly customerOffer?: Readonly<CustomerOffer>;
 
-  @Column({ name: 'shipment_date', type: 'date' })
-  shipmentDate: Date;
+  @Column({ name: 'quantity' })
+  quantity: number; // if supplier order row has orderedQuantity = 5, all associated supplier order deliveries must have the sum of quantity to 5
 
-  @Column()
-  awb: string;
+  @Column({ nullable: true })
+  awb?: string;
 
-  @Column({ default: false })
-  shipped: boolean; // only if marked as true the product is considered entered in stock
+  @Column({ name: 'warranty_file_id', nullable: true })
+  warrantyFileId?: number;
 
-  @Column({ name: 'supplier_invoice_date', type: 'date' })
-  supplierInvoiceDate: Date;
+  @ManyToOne(() => File, (file) => file.id)
+  @JoinColumn({ name: 'warranty_file_id' })
+  readonly warrantyFile?: Readonly<File>;
 
-  @Column({ name: 'supplier_invoice_number' })
-  supplierInvoiceNumber: string;
+  @Column({ name: 'handover_file_id', nullable: true })
+  handoverFileId?: number;
 
-  @Column({ name: 'dvi_number' })
-  dviNumber: string;
+  @ManyToOne(() => File, (file) => file.id)
+  @JoinColumn({ name: 'handover_file_id' })
+  readonly handoverFile?: Readonly<File>;
 
-  @Column({ name: 'dvi_date', type: 'date' })
-  dviDate: Date;
+  @Column({ name: 'dvi_number', nullable: true })
+  dviNumber?: string;
 
-  @Column({ name: 'supplier_currency_to_ron_exchange_rate', type: 'real' })
-  supplierCurrencyToRonExchangeRate: number;
+  @Column({ name: 'dvi_date', type: 'date', nullable: true })
+  dviDate?: Date;
 
-  @Column()
-  destination: string;
+  @Column({ name: 'nir_number', nullable: true })
+  nirNumber?: string;
 
-  @Column({ name: 'nir_number' })
-  nirNumber: string;
+  @Column({ name: 'nir_date', nullable: true })
+  nirDate?: Date;
 
-  @Column({ name: 'nir_date' })
-  nirDate: Date;
+  @Column({ name: 'supplier_invoice_date', type: 'date', nullable: true })
+  supplierInvoiceDate?: Date;
+
+  @Column({ name: 'supplier_invoice_number', nullable: true })
+  supplierInvoiceNumber?: string;
+
+  @Column({
+    name: 'supplier_currency_to_ron_exchange_rate',
+    type: 'real',
+    nullable: true,
+  })
+  supplierCurrencyToRonExchangeRate?: number;
+
+  isShipped() {
+    return Boolean(this.shipmentDate);
+  }
+
+  @OneToMany(
+    () => StockEntrySerialNumber,
+    (serialNumber) => serialNumber.serialNumber,
+  )
+  serialNumbers: StockEntrySerialNumber[];
 }

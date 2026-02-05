@@ -3,10 +3,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { SuppliersProductCatalog } from '../../suppliers-product-catalog/entities/suppliers-product-catalog.entity';
 import { SupplierOrder } from './supplier-order.entity';
+import { StockEntry } from '../../stock-entry/entities/stock-entry.entity';
 
 @Entity({ name: 'supplier_order_rows' })
 export class SupplierOrderRow {
@@ -32,4 +34,7 @@ export class SupplierOrderRow {
 
   @Column({ name: 'ordered_quantity', type: 'real' })
   orderedQuantity: number;
+
+  @OneToMany(() => StockEntry, (stockEntry) => stockEntry.id)
+  stockEntries?: StockEntry[];
 }

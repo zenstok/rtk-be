@@ -39,5 +39,5 @@ export class PriceAnalysisSupplierGroup {
   financialCost: number;
 
   @OneToMany(() => PriceAnalysisRow, (row) => row.id)
-  priceAnalysisRows: PriceAnalysisRow[];
+  priceAnalysisRows?: PriceAnalysisRow[];
 }

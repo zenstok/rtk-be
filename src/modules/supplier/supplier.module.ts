@@ -4,16 +4,9 @@ import { SupplierController } from './supplier.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Supplier } from './entities/supplier.entity';
 import { SupplierContactPerson } from './entities/supplier-contact-person.entity';
-import { SupplierOrderDelivery } from '../supplier-order/entities/supplier-order-delivery.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Supplier,
-      SupplierContactPerson,
-      SupplierOrderDelivery,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([Supplier, SupplierContactPerson])],
   controllers: [SupplierController],
   providers: [SupplierService],
 })

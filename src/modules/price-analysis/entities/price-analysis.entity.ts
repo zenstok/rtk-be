@@ -54,5 +54,5 @@ export class PriceAnalysis {
   readonly productProcurementRequest?: Readonly<ProductProcurementRequest>;
 
   @OneToMany(() => PriceAnalysisSupplierGroup, (group) => group.id)
-  priceAnalysisSupplierGroups: PriceAnalysisSupplierGroup[];
+  priceAnalysisSupplierGroups?: PriceAnalysisSupplierGroup[];
 }
