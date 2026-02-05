@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { File } from '../../file/entities/file.entity';
 import { SupplierOrderRow } from './supplier-order-row.entity';
+import { CustomerOffer } from '../../customer-offer/entities/customer-offer.entity';
 
 // TODO, check with business what fields should belong to stock entry and what fields should belong to supplier order delivery
 @Entity({ name: 'supplier_order_deliveries' })
@@ -20,6 +21,13 @@ export class SupplierOrderDelivery {
   @ManyToOne(() => SupplierOrderRow, (sor) => sor.id)
   @JoinColumn({ name: 'supplier_order_row_id' })
   readonly supplierOrderRow?: Readonly<SupplierOrderRow>; // supplier order row can have at most the ordered quantity as stock entries (the app should enforce this) .e.g ordered quantity is 3 => there are 3 stock entries associated with it
+
+  @Column({ name: 'customer_offer_id', nullable: true })
+  customerOfferId: number;
+
+  @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
+  @JoinColumn({ name: 'customer_offer_id' })
+  readonly customerOffer?: Readonly<CustomerOffer>;
 
   @Column({ name: 'quantity' })
   quantity: number; // if supplier order row has orderedQuantity = 5, all associated supplier order deliveries must have the sum of quantity to 5
