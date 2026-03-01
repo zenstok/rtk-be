@@ -28,6 +28,7 @@ export class PriceAnalysisService {
 
   async duplicate(id: number) {
     const priceAnalysis = (await this.priceAnalysisRepository.findOne({
+      where: { id },
       relations: { priceAnalysisSupplierGroups: { priceAnalysisRows: true } },
     })) as DeepPartial<PriceAnalysis> | null;
     if (!priceAnalysis) {
@@ -74,6 +75,7 @@ export class PriceAnalysisService {
   }
 
   async update(id: number, dto: UpdatePriceAnalysisDto) {
+    //TODO if associated offer is finalized, price analysis cannot be updated anymore
     if (!(await this.priceAnalysisRepository.existsBy({ id }))) {
       throw new NotFoundException('Price analysis not found.');
     }

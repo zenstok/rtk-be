@@ -53,6 +53,6 @@ export class PriceAnalysis {
   @JoinColumn({ name: 'product_procurement_request_id' })
   readonly productProcurementRequest?: Readonly<ProductProcurementRequest>;
 
-  @OneToMany(() => PriceAnalysisSupplierGroup, (group) => group.id)
+  @OneToMany(() => PriceAnalysisSupplierGroup, (group) => group.priceAnalysis)
   priceAnalysisSupplierGroups?: PriceAnalysisSupplierGroup[];
 }

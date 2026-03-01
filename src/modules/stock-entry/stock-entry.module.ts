@@ -3,10 +3,10 @@ import { StockEntryService } from './stock-entry.service';
 import { StockEntryController } from './stock-entry.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StockEntry } from './entities/stock-entry.entity';
-import { StockEntrySerialNumber } from './entities/stock-entry-serial-number.entity';
+import { StockEntryDelivery } from './entities/stock-entry-delivery.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([StockEntry, StockEntrySerialNumber])],
+  imports: [TypeOrmModule.forFeature([StockEntry, StockEntryDelivery])],
   controllers: [StockEntryController],
   providers: [StockEntryService],
 })

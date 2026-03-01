@@ -20,6 +20,9 @@ export enum SupplierOrderStatus {
   CANCELED = 'CANCELED',
 }
 
+//cat timp e generata se pot modifica valorile din comanda furnizor la PRET (nu si la cantitate)
+//daca am nevoie sa modific si cantitatea ca am rezervat din stoc neasociat prea mult, atunci anulez comanda cu totul si o refac
+
 @Entity({ name: 'supplier_orders' })
 export class SupplierOrder {
   @PrimaryGeneratedColumn()
@@ -90,17 +93,17 @@ export class SupplierOrder {
   @Column({ name: 'other_instructions' })
   otherInstructions: string;
 
-  @Column({ name: 'customer_offer_id', nullable: true })
-  customerOfferId: number;
-
   @Column({ name: 'order_reference', nullable: true }) // if null, it came from an offer
-  orderReference: string;
+  orderReference?: string;
 
   @Column({ name: 'manual_creation_reason', nullable: true }) // if null, it came from an offer
-  manualCreationReason: string;
+  manualCreationReason?: string;
 
-  @Column({ name: 'transportation_cost', type: 'real' }) // if null, it came from an offer
-  transportationCost: number;
+  @Column({ name: 'transportation_cost', type: 'real', nullable: true }) // if null, it came from an offer
+  transportationCost?: number;
+
+  @Column({ name: 'customer_offer_id', nullable: true })
+  customerOfferId?: number;
 
   @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
   @JoinColumn({ name: 'customer_offer_id' })

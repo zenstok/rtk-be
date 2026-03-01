@@ -33,18 +33,17 @@ export class CustomerOffer {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column()
   @Column({ type: 'enum', enum: CustomerOfferStatus })
   status: CustomerOfferStatus;
 
-  @Column({ name: 'confirmed_customer_order_receiving_method' })
-  confirmedCustomerOrderReceivingMethod: string; // PO standard Client/PO standard RTK/Email/Verbal
+  @Column({ name: 'confirmed_customer_order_receiving_method', nullable: true })
+  customerOrderReceivingMethod?: string; // PO standard Client/PO standard RTK/Email/Verbal
 
   @Column({ name: 'confirmed_customer_order_number', nullable: true })
-  confirmedCustomerOrderNumber: string;
+  customerOrderNumber?: string;
 
   @Column({ name: 'close_date', type: 'date', nullable: true }) // will be changed automatically to the moment of RECEIVED_CUSTOMER_ORDER
-  closeDate: Date;
+  closeDate?: Date;
 
   @Column({ name: 'close_probability', default: 0 })
   closeProbability: number;
@@ -63,13 +62,13 @@ export class CustomerOffer {
   @JoinColumn({ name: 'customer_id' })
   readonly customer?: Readonly<Customer>;
 
-  @Column({ name: 'customer_order_file_id' })
-  customerOrderFileId: number;
+  @Column({ name: 'customer_order_file_id', nullable: true })
+  customerOrderFileId?: string;
 
   @ManyToOne(() => File, (file) => file.id)
   @JoinColumn({ name: 'customer_order_file_id' })
   readonly customerOrderFile?: Readonly<File>;
 
-  @OneToMany(() => StockEntry, (stockEntry) => stockEntry.id)
-  readonly reservedStockEntries?: Readonly<StockEntry>; // (cand faci o comanda furnizor si alegi ca rezervi din stoc 3/5 produse, sistemul te oblica sa alegi SN-urile produselor pe care le rezervi si dupa in view one oferta sa poti sa faci iesiri stoc ptr aceste SN-uri)
+  @OneToMany(() => StockEntry, (stockEntry) => stockEntry.customerOffer)
+  readonly reservedStockEntries?: Readonly<StockEntry[]>;
 }

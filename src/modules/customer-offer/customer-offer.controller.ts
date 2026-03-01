@@ -1,34 +1,106 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { CustomerOfferService } from './customer-offer.service';
 import { CreateCustomerOfferDto } from './dto/create-customer-offer.dto';
 import { UpdateCustomerOfferDto } from './dto/update-customer-offer.dto';
+import { CreateCustomerOfferStockExitDto } from './dto/create-customer-offer-stock-exit.dto';
+import { FindDto } from '../../utils/dtos/find.dto';
+import { UpdateCustomerOfferStatusDto } from './dto/update-customer-offer-status.dto';
 
 @Controller('customer-offer')
 export class CustomerOfferController {
   constructor(private readonly customerOfferService: CustomerOfferService) {}
 
+  // find all reserved stock entries (find all stock entries with customer offer id = current customer offer)
+  // find all UNRESERVED stock entries by product (unreserved stock entry = stock entry with NULL customer offer and NULL stock exit)
+  // POST stock-exit based on stock entry (cap tabel in view oferta/view produs: CLIENT | OFERTA | NR. FACT RTK | DATA FACT RTK | PRET IESIRE RON | PRET IESIRE EUR | TARA DESTINATIE | LOCALIZARE PRODUS | BUN LIVRAT FIZIC
+  // find all stock exits by customer offer id
+
+  //find all products with cantitate totala (din analiza pret), cantitate comanda furnizor, cantitate rezervata,cantitate liberta
   @Post()
-  create(@Body() createCustomerOfferDto: CreateCustomerOfferDto) {
-    return this.customerOfferService.create(createCustomerOfferDto);
+  create(@Body() dto: CreateCustomerOfferDto) {
+    return this.customerOfferService.create(dto);
   }
 
-  @Get()
-  findAll() {
-    return this.customerOfferService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.customerOfferService.findOne(+id);
+  @Post(':id/update-status')
+  updateStatus(
+    @Param('id') id: number,
+    @Body() dto: UpdateCustomerOfferStatusDto,
+  ) {
+    return this.customerOfferService.updateStatus(id, dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCustomerOfferDto: UpdateCustomerOfferDto) {
-    return this.customerOfferService.update(+id, updateCustomerOfferDto);
+  update(@Param('id') id: number, @Body() dto: UpdateCustomerOfferDto) {
+    return this.customerOfferService.update(id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.customerOfferService.remove(+id);
+  @Get(':id/download')
+  download(@Param('id') id: number) {
+    //TODO
+    //find file id of customer offer pdf file, download
+    //maybe we dont need this and we use file.controller@download directly
+  }
+
+  @Get(':id/download-confirmed-customer-order')
+  downloadConfirmedCustomerOrder(@Param('id') id: number) {
+    //TODO
+    //find file id of customer order file, download
+    //maybe we dont need this and we use file.controller@download directly
+  }
+
+  @Get()
+  findAll(@Query() dto: FindDto) {
+    return this.customerOfferService.findAll(dto);
+  }
+
+  @Get(':id/products')
+  findAllByCustomerOfferId(@Param('id') id: number, @Query() dto: FindDto) {
+    return this.customerOfferService.findAllProducts(id, dto);
+  }
+
+  @Get('unreserved-stock-entries/:suppliersProductCatalogId')
+  findUnreservedStockEntries(
+    @Param('suppliersProductCatalogId') suppliersProductCatalogId: number,
+  ) {
+    return this.customerOfferService.findUnreservedStockEntries(
+      suppliersProductCatalogId,
+    );
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: number) {
+    return this.customerOfferService.findOne(id);
+  }
+
+  @Get(':id/reserved-stock-entries')
+  findReservedStockEntries(@Param('id') id: number) {
+    return this.customerOfferService.findReservedStockEntries(id);
+  }
+
+  @Get(':id/available-stock-entries')
+  findAvailableStockEntries(@Param('id') id: number) {
+    return this.customerOfferService.findAvailableStockEntries(id);
+  }
+
+  @Get(':id/stock-exits')
+  findStockExits(@Param('id') id: number) {
+    return this.customerOfferService.findStockExits(id);
+  }
+
+  @Post(':id/stock-exit')
+  createStockExit(
+    @Param('id') id: number,
+    @Body() dto: CreateCustomerOfferStockExitDto,
+  ) {
+    return this.customerOfferService.createStockExit(id, dto);
   }
 }

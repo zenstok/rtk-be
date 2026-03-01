@@ -27,10 +27,10 @@ export class SupplierContactPerson {
   @Column({ name: 'contact_person_phone' })
   phone: string;
 
-  @Column({ name: 'customer_id' })
+  @Column({ name: 'supplier_id' })
   supplierId: number;
 
   @ManyToOne(() => Supplier, (supplier) => supplier.id)
   @JoinColumn({ name: 'supplier_id' })
-  readonly customer?: Readonly<Supplier>;
+  readonly supplier?: Readonly<Supplier>;
 }

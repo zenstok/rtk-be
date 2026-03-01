@@ -1,40 +1,59 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { CustomerOffer } from '../../customer-offer/entities/customer-offer.entity';
 import { Customer } from '../../customer/entities/customer.entity';
 import { StockEntry } from '../../stock-entry/entities/stock-entry.entity';
+import { CustomerOffer } from '../../customer-offer/entities/customer-offer.entity';
 
+export enum StockExitSource {
+  DIRECT_SALE = 'DIRECT_SALE',
+  FROM_OFFER_RESERVATION = 'FROM_OFFER_RESERVATION',
+  FROM_RESERVED_SUPPLIER_ORDER = 'FROM_RESERVED_SUPPLIER_ORDER',
+}
+
+// source determines how the customer was resolved:
+// - DIRECT_SALE: free stock sold from product screen, customer provided directly at exit creation
+// - FROM_OFFER_RESERVATION: stock entry was manually reserved to an offer (stockEntry.customerOfferId was set on demand)
+// - FROM_RESERVED_SUPPLIER_ORDER: stock entry came from a reserved supplier order (stockEntry.origin = FROM_RESERVED_SUPPLIER_ORDER)
+// In all cases, customerId is always resolved and stored at creation time for easy querying.
 @Entity({ name: 'stock_exits' })
 export class StockExit {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'stock_entry_id', unique: true })
-  stockEntryId: number;
+  @Column({ name: 'stock_entry_serial_number' })
+  stockEntrySerialNumber: string;
 
-  @OneToOne(() => StockEntry, (stockEntry) => stockEntry.id)
-  @JoinColumn({ name: 'stock_entry_id' })
+  @OneToOne(() => StockEntry, { eager: false })
+  @JoinColumn({
+    name: 'stock_entry_serial_number',
+    referencedColumnName: 'serialNumber',
+  })
   readonly stockEntry?: Readonly<StockEntry>;
 
-  @Column({ name: 'customer_offer_id', nullable: true })
-  customerOfferId?: number;
-
-  @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
-  @JoinColumn({ name: 'customer_offer_id' })
-  readonly customerOffer?: Readonly<CustomerOffer>;
+  @Column({ type: 'enum', enum: StockExitSource })
+  source: StockExitSource;
 
   @Column({ name: 'customer_id' })
-  customerId: number;
+  customerId: number; // always resolved at creation time, regardless of source
 
   @ManyToOne(() => Customer, (customer) => customer.id)
   @JoinColumn({ name: 'customer_id' })
   readonly customer?: Readonly<Customer>;
+
+  @Column({ name: 'customer_offer_id', nullable: true })
+  customerOfferId: number; // always resolved at creation time, regardless of source
+
+  @ManyToOne(() => CustomerOffer, (offer) => offer.id)
+  @JoinColumn({ name: 'customer_offer_id' })
+  readonly customerOffer?: Readonly<CustomerOffer>;
 
   @Column({ name: 'invoice_date', type: 'date' })
   invoiceDate: Date;
@@ -66,6 +85,7 @@ export class StockExit {
   @Column({ name: 'declaration_of_conformity_date' })
   declarationOfConformityDate: Date;
 
+  // we dont care if these fields are right, first we init with a version that works and shows the flow
   @Column({ name: 'handover_reception_report_number' })
   handoverReceptionReportNumber: string;
 
@@ -92,4 +112,10 @@ export class StockExit {
 
   @Column({ name: 'custody_report_date', nullable: true })
   custodyReportDate: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

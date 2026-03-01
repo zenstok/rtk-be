@@ -1,7 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { StockExitService } from './stock-exit.service';
 import { CreateStockExitDto } from './dto/create-stock-exit.dto';
 import { UpdateStockExitDto } from './dto/update-stock-exit.dto';
+import { FindDto } from '../../utils/dtos/find.dto';
 
 @Controller('stock-exit')
 export class StockExitController {
@@ -17,13 +27,24 @@ export class StockExitController {
     return this.stockExitService.findAll();
   }
 
+  @Get('by-customer-offer-id/:customer-offer-id')
+  findAllByCustomerOfferId(
+    @Param('customer-offer-id') customerOfferId: number,
+    @Query() dto: FindDto,
+  ) {
+    return this.stockExitService.findAllByCustomerOfferId(customerOfferId, dto);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.stockExitService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStockExitDto: UpdateStockExitDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateStockExitDto: UpdateStockExitDto,
+  ) {
     return this.stockExitService.update(+id, updateStockExitDto);
   }
 

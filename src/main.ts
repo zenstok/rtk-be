@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { CustomerOfferService } from './modules/customer-offer/customer-offer.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,18 +24,25 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3000);
+
+  app.get(CustomerOfferService).findAllProducts(1, { limit: 10, offset: 0 });
 }
 bootstrap();
+
+// TODO AI sa faca
+// update endpoint-uri logica price analysis (sa facem si cu filtre & search param sa faca bine)
+// CRUD solicitari produse
+// CRUD users
+// CRUD clients & clients contact persons
+// CRUD furnizori & furnizori contact persons
 // TODO endpointuri ce tin de price analysis -> ce tin de oferta (vezi si rezervare produse) -> ce tin de comanda furnizor
 
-// dupa ce rafinez campurile de baza
-// vad care pe unde am fisiere atasabile
-// fac file module
-// fac fk catre file unde pun fisiere
-
-// mai exista un status validata dupa cel de generata, cat timp e generata se pot modifica valorile din comanda furnizor la PRET (nu si la cantitate)
-// daca am nevoie sa modific si cantitatea ca am rezervat din stoc neasociat prea mult, atunci anulez comanda cu totul si o refac
+// CRUD produse
+// produse stats,
+// tabel furnizori asociati produse
+// tabel intrari stoc asociate produse
+// tabel iesiri stoc asociate produse
 
 // pentru fiecare price analysis supplier group avem o sectiune in care generam comanda furnizor
 // la fiecare supplier_order row am camp cantitate comandata si cantitate a se rezerva din stocul curent
@@ -47,3 +55,10 @@ bootstrap();
 
 // I can cancel an offer only if all supplier order rows are canceled
 // flow -> I cancel all supplier order rows -> I can cancel an offer
+
+// 12.02.2026
+// iesire stoc pot sa fac din ecranul produsului NUMAI si NUMAI daca SN-ul vine dintr-o comanda furnizor simpla, iar SN-ul nici nu a fost rezervat la vreo oferta
+// altfel iesire stoc fac numai si numai din ecranul ofertei
+// IESIRI STOC se fac din 2 locuri
+// IESIRI STOC SE FAC DIN ECRANUL OFERTEI (daca sunt din comenzi furnizor rezervate)
+// IESIRI STOC SE FAC DIN ECRANUL PRODUSULUI (daca sunt din comenzi furnizor simple)

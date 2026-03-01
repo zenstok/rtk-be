@@ -1,93 +1,54 @@
-import { CustomerOffer } from 'src/modules/customer-offer/entities/customer-offer.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { SupplierOrderRow } from '../../supplier-order/entities/supplier-order-row.entity';
-import { File } from '../../file/entities/file.entity';
-import { StockEntrySerialNumber } from './stock-entry-serial-number.entity';
+import { StockEntryDelivery } from './stock-entry-delivery.entity';
+import { CustomerOffer } from '../../customer-offer/entities/customer-offer.entity';
+
+export enum StockEntryOrigin {
+  FROM_RESERVED_SUPPLIER_ORDER = 'FROM_RESERVED_SUPPLIER_ORDER',
+  FROM_SIMPLE_SUPPLIER_ORDER = 'FROM_SIMPLE_SUPPLIER_ORDER',
+}
+
+// origin determines the source of this stock entry:
+// - FROM_RESERVED_SUPPLIER_ORDER: customerOfferId is always set at creation time
+//   (copied from supplierOrder.customerOfferId). Cannot be unreserved.
+// - FROM_SIMPLE_SUPPLIER_ORDER: customerOfferId is initially NULL (free stock).
+//   Can be manually reserved to an offer by setting customerOfferId, or unreserved by setting it back to NULL.
 
 @Entity({ name: 'stock_entries' })
 export class StockEntry {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ name: 'serial_number' })
+  serialNumber: string;
 
-  @Column({ name: 'estimated_shipment_date', type: 'date' })
-  estimatedShipmentDate: Date;
+  @Column({ name: 'stock_entry_delivery_id' })
+  stockEntryDeliveryId: number;
 
-  @Column({ name: 'shipment_date', type: 'date', nullable: true })
-  shipmentDate?: Date; // when this is set, it implies stock entry rows are created
+  @ManyToOne(() => StockEntryDelivery, (delivery) => delivery.stockEntries)
+  @JoinColumn({ name: 'stock_entry_delivery_id' })
+  readonly stockEntryDelivery?: Readonly<StockEntryDelivery>;
 
-  @Column({ name: 'supplier_order_row_id' })
-  supplierOrderRowId: number;
-
-  @ManyToOne(() => SupplierOrderRow, (sor) => sor.id)
-  @JoinColumn({ name: 'supplier_order_row_id' })
-  readonly supplierOrderRow?: Readonly<SupplierOrderRow>; // supplier order row can have at most the ordered quantity as stock entries (the app should enforce this) .e.g ordered quantity is 3 => there are 3 stock entries associated with it
+  @Column({ type: 'enum', enum: StockEntryOrigin })
+  origin: StockEntryOrigin;
 
   @Column({ name: 'customer_offer_id', nullable: true })
-  customerOfferId: number;
+  customerOfferId?: number;
 
-  @ManyToOne(() => CustomerOffer, (customerOffer) => customerOffer.id)
+  @ManyToOne(
+    () => CustomerOffer,
+    (customerOffer) => customerOffer.reservedStockEntries,
+  )
   @JoinColumn({ name: 'customer_offer_id' })
   readonly customerOffer?: Readonly<CustomerOffer>;
 
-  @Column({ name: 'quantity' })
-  quantity: number; // if supplier order row has orderedQuantity = 5, all associated supplier order deliveries must have the sum of quantity to 5
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @Column({ nullable: true })
-  awb?: string;
-
-  @Column({ name: 'warranty_file_id', nullable: true })
-  warrantyFileId?: number;
-
-  @ManyToOne(() => File, (file) => file.id)
-  @JoinColumn({ name: 'warranty_file_id' })
-  readonly warrantyFile?: Readonly<File>;
-
-  @Column({ name: 'handover_file_id', nullable: true })
-  handoverFileId?: number;
-
-  @ManyToOne(() => File, (file) => file.id)
-  @JoinColumn({ name: 'handover_file_id' })
-  readonly handoverFile?: Readonly<File>;
-
-  @Column({ name: 'dvi_number', nullable: true })
-  dviNumber?: string;
-
-  @Column({ name: 'dvi_date', type: 'date', nullable: true })
-  dviDate?: Date;
-
-  @Column({ name: 'nir_number', nullable: true })
-  nirNumber?: string;
-
-  @Column({ name: 'nir_date', nullable: true })
-  nirDate?: Date;
-
-  @Column({ name: 'supplier_invoice_date', type: 'date', nullable: true })
-  supplierInvoiceDate?: Date;
-
-  @Column({ name: 'supplier_invoice_number', nullable: true })
-  supplierInvoiceNumber?: string;
-
-  @Column({
-    name: 'supplier_currency_to_ron_exchange_rate',
-    type: 'real',
-    nullable: true,
-  })
-  supplierCurrencyToRonExchangeRate?: number;
-
-  isShipped() {
-    return Boolean(this.shipmentDate);
-  }
-
-  @OneToMany(
-    () => StockEntrySerialNumber,
-    (serialNumber) => serialNumber.serialNumber,
-  )
-  serialNumbers: StockEntrySerialNumber[];
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

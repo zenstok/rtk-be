@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { SuppliersProductCatalog } from '../../suppliers-product-catalog/entities/suppliers-product-catalog.entity';
 import { SupplierOrder } from './supplier-order.entity';
-import { StockEntry } from '../../stock-entry/entities/stock-entry.entity';
+import { StockEntryDelivery } from '../../stock-entry/entities/stock-entry-delivery.entity';
 
 @Entity({ name: 'supplier_order_rows' })
 export class SupplierOrderRow {
@@ -35,6 +35,6 @@ export class SupplierOrderRow {
   @Column({ name: 'ordered_quantity', type: 'real' })
   orderedQuantity: number;
 
-  @OneToMany(() => StockEntry, (stockEntry) => stockEntry.id)
-  stockEntries?: StockEntry[];
+  @OneToMany(() => StockEntryDelivery, (delivery) => delivery.supplierOrderRow)
+  stockEntryDeliveries?: StockEntryDelivery[];
 }

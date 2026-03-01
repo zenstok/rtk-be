@@ -1,34 +1,84 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseFilePipe,
+  Post,
+  StreamableFile,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { User } from '../user/entities/user.entity';
+import { UPLOAD_DIR } from './file.constants';
 import { FileService } from './file.service';
-import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
 
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
+
+const storage = diskStorage({
+  destination: (req, _file, cb) => {
+    const user = (req as any).user as User;
+    const dir = path.join(UPLOAD_DIR, String(user.id));
+    fs.mkdir(dir, { recursive: true })
+      .then(() => cb(null, dir))
+      .catch((err) => cb(err, dir));
+  },
+  filename: (_req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+@ApiTags('File')
+@ApiBearerAuth()
 @Controller('file')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  @Post()
-  create(@Body() createFileDto: CreateFileDto) {
-    return this.fileService.create(createFileDto);
-  }
+  // @Post('upload')
+  // @UseInterceptors(
+  //   FileInterceptor('file', { storage, limits: { fileSize: MAX_FILE_SIZE } }),
+  // )
+  // @ApiConsumes('multipart/form-data')
+  // @ApiBody({
+  //   schema: {
+  //     type: 'object',
+  //     properties: {
+  //       file: {
+  //         type: 'string',
+  //         format: 'binary',
+  //       },
+  //     },
+  //   },
+  // })
+  // upload(
+  //   @UploadedFile(new ParseFilePipe())
+  //   file: Express.Multer.File,
+  //   @User() user: UserEntity,
+  // ) {
+  //   return this.fileService.create(
+  //     {
+  //       name: file.filename,
+  //       path: file.path,
+  //       extension: path.extname(file.originalname),
+  //       size: file.size,
+  //       mimetype: file.mimetype,
+  //     },
+  //     user,
+  //   );
+  // }
 
-  @Get()
-  findAll() {
-    return this.fileService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.fileService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFileDto: UpdateFileDto) {
-    return this.fileService.update(+id, updateFileDto);
+  @Get('download/:id')
+  download(@Param('id') id: string): Promise<StreamableFile> {
+    return this.fileService.getFileStream(id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.fileService.remove(+id);
+  delete(@Param('id') id: string): Promise<{ message: string }> {
+    return this.fileService.delete(id);
   }
 }

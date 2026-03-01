@@ -38,6 +38,6 @@ export class PriceAnalysisSupplierGroup {
   @Column({ name: 'financial_cost', type: 'real' })
   financialCost: number;
 
-  @OneToMany(() => PriceAnalysisRow, (row) => row.id)
+  @OneToMany(() => PriceAnalysisRow, (row) => row.priceAnalysisSupplierGroup)
   priceAnalysisRows?: PriceAnalysisRow[];
 }

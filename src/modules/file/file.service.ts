@@ -1,26 +1,62 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
+import { FileRepository } from './repositories/file.repository';
 import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
+import { File } from './entities/file.entity';
+import { User } from '../user/entities/user.entity';
+import * as fs from 'fs/promises';
+import { createReadStream } from 'fs';
 
 @Injectable()
 export class FileService {
-  create(createFileDto: CreateFileDto) {
-    return 'This action adds a new file';
+  constructor(private readonly fileRepository: FileRepository) {}
+
+  create(dto: CreateFileDto, uploader: User): Promise<File> {
+    return this.fileRepository.save(
+      this.fileRepository.create({
+        name: dto.name,
+        path: dto.path,
+        extension: dto.extension,
+        size: dto.size,
+        mimetype: dto.mimetype,
+        uploaderId: uploader.id,
+      }),
+    );
   }
 
-  findAll() {
-    return `This action returns all file`;
+  async getFileStream(id: string): Promise<StreamableFile> {
+    const file = await this.fileRepository.findOne({ where: { id } });
+    if (!file) {
+      throw new NotFoundException('File not found');
+    }
+
+    try {
+      await fs.access(file.path);
+    } catch {
+      throw new NotFoundException('File not found on disk');
+    }
+
+    const readStream = createReadStream(file.path);
+    return new StreamableFile(readStream, {
+      type: file.mimetype,
+      disposition: `attachment; filename="${file.prettyFileName}"`,
+      length: file.size,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} file`;
-  }
+  async delete(id: string): Promise<{ message: string }> {
+    const file = await this.fileRepository.findOne({ where: { id } });
+    if (!file) {
+      throw new NotFoundException('File not found');
+    }
 
-  update(id: number, updateFileDto: UpdateFileDto) {
-    return `This action updates a #${id} file`;
-  }
+    try {
+      await fs.unlink(file.path);
+    } catch {
+      // File might not exist on disk, continue with DB deletion
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} file`;
+    await this.fileRepository.delete({ id });
+
+    return { message: 'File deleted successfully' };
   }
 }

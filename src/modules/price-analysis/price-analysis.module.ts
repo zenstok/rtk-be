@@ -7,6 +7,7 @@ import { PriceAnalysisRow } from './entities/price-analysis-row.entity';
 import { PriceAnalysisSupplierGroup } from './entities/price-analysis-supplier-group.entity';
 import { PriceAnalysisRepository } from './repositories/price-analysis.repository';
 import { BnrApiModule } from '../bnr-api/bnr-api.module';
+import { PriceAnalysisRowRepository } from './repositories/price-analysis-row.repository';
 
 @Module({
   imports: [
@@ -18,6 +19,15 @@ import { BnrApiModule } from '../bnr-api/bnr-api.module';
     BnrApiModule,
   ],
   controllers: [PriceAnalysisController],
-  providers: [PriceAnalysisService, PriceAnalysisRepository],
+  providers: [
+    PriceAnalysisService,
+    PriceAnalysisRepository,
+    PriceAnalysisRowRepository,
+  ],
+  exports: [
+    PriceAnalysisService,
+    PriceAnalysisRepository,
+    PriceAnalysisRowRepository,
+  ],
 })
 export class PriceAnalysisModule {}
