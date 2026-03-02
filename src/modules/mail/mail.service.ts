@@ -33,7 +33,7 @@ export class MailService {
   private getResetPasswordLink(token: string): string {
     const baseUrl = this.configService.get(
       'FRONTEND_EMAIL_PASSWORD_RESET_URL',
-      'http://localhost:3001/reset-password',
+      'http://localhost:8081/reset-password',
     );
     return `${baseUrl}?token=${token}`;
   }
