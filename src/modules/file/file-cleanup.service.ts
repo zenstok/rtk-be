@@ -32,8 +32,10 @@ export class FileCleanupService {
         await this.fileService.delete(file.id);
         deletedCount++;
       } catch (error) {
-        this.logger.error(`Failed to delete orphan file ${file.id}}`);
-        console.error(error);
+        this.logger.error(
+          `Failed to delete orphan file ${file.id}`,
+          error instanceof Error ? error.stack : String(error),
+        );
       }
     }
 
@@ -46,10 +48,21 @@ export class FileCleanupService {
     return this.dataSource
       .getRepository(File)
       .createQueryBuilder('f')
-      .leftJoin('assigned_work_stage_files', 'awsf', 'awsf.file_id = f.id')
-      .leftJoin('remedial_work_stage_files', 'rwsf', 'rwsf.file_id = f.id')
-      .where('awsf.file_id IS NULL')
-      .andWhere('rwsf.file_id IS NULL')
+      .leftJoin('customer_offers', 'co', 'co.customer_order_file_id = f.id')
+      .leftJoin(
+        'stock_entry_deliveries',
+        'sed_w',
+        'sed_w.warranty_file_id = f.id',
+      )
+      .leftJoin(
+        'stock_entry_deliveries',
+        'sed_h',
+        'sed_h.handover_file_id = f.id',
+      )
+      .where('co.customer_order_file_id IS NULL')
+      .andWhere('sed_w.warranty_file_id IS NULL')
+      .andWhere('sed_h.handover_file_id IS NULL')
+      .select(['f.id', 'f.path'])
       .getMany();
   }
 }
