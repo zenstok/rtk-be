@@ -1,26 +1,95 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { CreateSupplierContactPersonDto } from './dto/create-supplier-contact-person.dto';
+import { UpdateSupplierContactPersonDto } from './dto/update-supplier-contact-person.dto';
+import { SupplierRepository } from './repositories/supplier.repository';
+import { SupplierContactPersonRepository } from './repositories/supplier-contact-person.repository';
+import { FindDto } from '../../utils/dtos/find.dto';
 
 @Injectable()
 export class SupplierService {
-  create(createSupplierDto: CreateSupplierDto) {
-    return 'This action adds a new supplier';
+  constructor(
+    private readonly supplierRepository: SupplierRepository,
+    private readonly supplierContactPersonRepository: SupplierContactPersonRepository,
+  ) {}
+
+  async create(dto: CreateSupplierDto) {
+    return this.supplierRepository.save(dto);
   }
 
-  findAll() {
-    return `This action returns all supplier`;
+  async findAll(dto: FindDto) {
+    const [results, total] = await this.supplierRepository.findAndCount({
+      order: { name: 'ASC' },
+      skip: dto.offset,
+      take: dto.limit > 0 ? dto.limit : undefined,
+    });
+    return { results, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} supplier`;
+  async findOne(id: number) {
+    const supplier = await this.supplierRepository.findOne({
+      where: { id },
+      relations: { pickupContactPerson: true },
+    });
+    if (!supplier) {
+      throw new NotFoundException('Supplier not found');
+    }
+    return supplier;
   }
 
-  update(id: number, updateSupplierDto: UpdateSupplierDto) {
-    return `This action updates a #${id} supplier`;
+  async update(id: number, dto: UpdateSupplierDto) {
+    if (!(await this.supplierRepository.existsBy({ id }))) {
+      throw new NotFoundException('Supplier not found');
+    }
+    await this.supplierRepository.update({ id }, dto);
+    return { message: 'Supplier updated successfully' };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} supplier`;
+  async remove(id: number) {
+    if (!(await this.supplierRepository.existsBy({ id }))) {
+      throw new NotFoundException('Supplier not found');
+    }
+    await this.supplierRepository.delete({ id });
+    return { message: 'Supplier deleted successfully' };
+  }
+
+  async createContactPerson(supplierId: number, dto: CreateSupplierContactPersonDto) {
+    if (!(await this.supplierRepository.existsBy({ id: supplierId }))) {
+      throw new NotFoundException('Supplier not found');
+    }
+    return this.supplierContactPersonRepository.save({
+      ...dto,
+      supplierId,
+    });
+  }
+
+  async findContactPersonsBySupplier(supplierId: number, dto: FindDto) {
+    if (!(await this.supplierRepository.existsBy({ id: supplierId }))) {
+      throw new NotFoundException('Supplier not found');
+    }
+    const [results, total] =
+      await this.supplierContactPersonRepository.findAndCount({
+        where: { supplierId },
+        skip: dto.offset,
+        take: dto.limit > 0 ? dto.limit : undefined,
+      });
+    return { results, total };
+  }
+
+  async updateContactPerson(id: number, dto: UpdateSupplierContactPersonDto) {
+    if (!(await this.supplierContactPersonRepository.existsBy({ id }))) {
+      throw new NotFoundException('Supplier contact person not found');
+    }
+    await this.supplierContactPersonRepository.update({ id }, dto);
+    return { message: 'Supplier contact person updated successfully' };
+  }
+
+  async removeContactPerson(id: number) {
+    if (!(await this.supplierContactPersonRepository.existsBy({ id }))) {
+      throw new NotFoundException('Supplier contact person not found');
+    }
+    await this.supplierContactPersonRepository.delete({ id });
+    return { message: 'Supplier contact person deleted successfully' };
   }
 }

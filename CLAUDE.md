@@ -129,12 +129,3 @@ npm run build           # Production build
 ```
 
 Swagger docs available at `http://localhost:3000/api` when running.
-
-## TODO / In Progress
-
-See `UPCOMING.md` for the feature roadmap and `main.ts` comments for additional TODO items. Key remaining work:
-- CRUD for users, customers, suppliers, products (basic endpoints)
-- Price analysis update/filter endpoints
-- Product screen (stats, associated suppliers, stock entries, stock exits)
-- Customer offer PDF generation
-- Stock exit from product screen (direct sale flow)

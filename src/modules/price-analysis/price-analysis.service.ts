@@ -1,16 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePriceAnalysisDto } from './dto/create-price-analysis.dto';
 import { UpdatePriceAnalysisDto } from './dto/update-price-analysis.dto';
+import { CreatePriceAnalysisSupplierGroupDto } from './dto/create-price-analysis-supplier-group.dto';
+import { UpdatePriceAnalysisSupplierGroupDto } from './dto/update-price-analysis-supplier-group.dto';
+import { CreatePriceAnalysisRowDto } from './dto/create-price-analysis-row.dto';
+import { UpdatePriceAnalysisRowDto } from './dto/update-price-analysis-row.dto';
+import { FindPriceAnalysisDto } from './dto/find-price-analysis.dto';
 import { PriceAnalysisRepository } from './repositories/price-analysis.repository';
+import { PriceAnalysisSupplierGroupRepository } from './repositories/price-analysis-supplier-group.repository';
+import { PriceAnalysisRowRepository } from './repositories/price-analysis-row.repository';
 import { BnrApiService } from '../bnr-api/bnr-api.service';
 import { PriceAnalysis } from './entities/price-analysis.entity';
 import { DeepPartial } from 'typeorm';
-import { FindDto } from '../../utils/dtos/find.dto';
 
 @Injectable()
 export class PriceAnalysisService {
   constructor(
     private readonly priceAnalysisRepository: PriceAnalysisRepository,
+    private readonly supplierGroupRepository: PriceAnalysisSupplierGroupRepository,
+    private readonly rowRepository: PriceAnalysisRowRepository,
     private readonly bnrApiService: BnrApiService,
   ) {}
 
@@ -49,22 +57,36 @@ export class PriceAnalysisService {
     };
   }
 
-  async findAll(dto: FindDto) {
-    const [results, total] = await this.priceAnalysisRepository.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: dto.offset,
-      take: dto.limit > 0 ? dto.limit : undefined,
-    });
+  async findAll(dto: FindPriceAnalysisDto) {
+    const qb = this.priceAnalysisRepository
+      .createQueryBuilder('pa')
+      .leftJoinAndSelect(
+        'pa.productProcurementRequest',
+        'ppr',
+      )
+      .orderBy('pa.createdAt', 'DESC')
+      .skip(dto.offset)
+      .take(dto.limit > 0 ? dto.limit : undefined);
 
+    if (dto.productProcurementRequestId) {
+      qb.andWhere('pa.productProcurementRequestId = :pprId', {
+        pprId: dto.productProcurementRequestId,
+      });
+    }
+
+    if (dto.search) {
+      qb.andWhere('ppr.projectName ILIKE :search', {
+        search: `%${dto.search}%`,
+      });
+    }
+
+    const [results, total] = await qb.getManyAndCount();
     return { results, total };
   }
 
   async findOne(id: number) {
-    if (!(await this.priceAnalysisRepository.existsBy({ id }))) {
-      throw new NotFoundException('Price analysis not found.');
-    }
-
-    return this.priceAnalysisRepository.findOne({
+    const pa = await this.priceAnalysisRepository.findOne({
+      where: { id },
       relations: {
         priceAnalysisSupplierGroups: {
           supplier: true,
@@ -72,6 +94,10 @@ export class PriceAnalysisService {
         },
       },
     });
+    if (!pa) {
+      throw new NotFoundException('Price analysis not found.');
+    }
+    return pa;
   }
 
   async update(id: number, dto: UpdatePriceAnalysisDto) {
@@ -93,15 +119,67 @@ export class PriceAnalysisService {
     return { message: 'Price analysis deleted successfully.' };
   }
 
-  createSupplierGroup(priceAnalysisId: number, dto: unknown) {}
+  // Supplier Group CRUD
 
-  updateSupplierGroup(groupId: number, dto: unknown) {}
+  async createSupplierGroup(
+    priceAnalysisId: number,
+    dto: CreatePriceAnalysisSupplierGroupDto,
+  ) {
+    if (!(await this.priceAnalysisRepository.existsBy({ id: priceAnalysisId }))) {
+      throw new NotFoundException('Price analysis not found.');
+    }
+    return this.supplierGroupRepository.save({
+      ...dto,
+      priceAnalysisId,
+    });
+  }
 
-  deleteSupplierGroup(groupId: number) {}
+  async updateSupplierGroup(
+    groupId: number,
+    dto: UpdatePriceAnalysisSupplierGroupDto,
+  ) {
+    if (!(await this.supplierGroupRepository.existsBy({ id: groupId }))) {
+      throw new NotFoundException('Price analysis supplier group not found.');
+    }
+    await this.supplierGroupRepository.update({ id: groupId }, dto);
+    return { message: 'Price analysis supplier group updated successfully.' };
+  }
 
-  createRow(groupId: number, dto: unknown) {}
+  async deleteSupplierGroup(groupId: number) {
+    if (!(await this.supplierGroupRepository.existsBy({ id: groupId }))) {
+      throw new NotFoundException('Price analysis supplier group not found.');
+    }
+    // Cascade: delete rows belonging to this group first
+    await this.rowRepository.delete({ priceAnalysisSupplierGroupId: groupId });
+    await this.supplierGroupRepository.delete({ id: groupId });
+    return { message: 'Price analysis supplier group deleted successfully.' };
+  }
 
-  updateRow(groupId: number, dto: unknown) {}
+  // Row CRUD
 
-  deleteRow(groupId: number, dto: unknown) {}
+  async createRow(groupId: number, dto: CreatePriceAnalysisRowDto) {
+    if (!(await this.supplierGroupRepository.existsBy({ id: groupId }))) {
+      throw new NotFoundException('Price analysis supplier group not found.');
+    }
+    return this.rowRepository.save({
+      ...dto,
+      priceAnalysisSupplierGroupId: groupId,
+    });
+  }
+
+  async updateRow(rowId: number, dto: UpdatePriceAnalysisRowDto) {
+    if (!(await this.rowRepository.existsBy({ id: rowId }))) {
+      throw new NotFoundException('Price analysis row not found.');
+    }
+    await this.rowRepository.update({ id: rowId }, dto);
+    return { message: 'Price analysis row updated successfully.' };
+  }
+
+  async deleteRow(rowId: number) {
+    if (!(await this.rowRepository.existsBy({ id: rowId }))) {
+      throw new NotFoundException('Price analysis row not found.');
+    }
+    await this.rowRepository.delete({ id: rowId });
+    return { message: 'Price analysis row deleted successfully.' };
+  }
 }

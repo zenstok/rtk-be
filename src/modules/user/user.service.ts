@@ -1,26 +1,62 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRepository } from './repositories/user.repository';
+import { FindDto } from '../../utils/dtos/find.dto';
+import { BCRYPT_SALT_ROUNDS } from '../auth/auth.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly userRepository: UserRepository) {}
+
+  async create(dto: CreateUserDto) {
+    const existing = await this.userRepository.findOneBy({ email: dto.email });
+    if (existing) {
+      throw new BadRequestException('Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_SALT_ROUNDS);
+    return this.userRepository.save({
+      ...dto,
+      password: hashedPassword,
+    });
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll(dto: FindDto) {
+    const [results, total] = await this.userRepository.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: dto.offset,
+      take: dto.limit > 0 ? dto.limit : undefined,
+    });
+    return { results, total };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, dto: UpdateUserDto) {
+    if (!(await this.userRepository.existsBy({ id }))) {
+      throw new NotFoundException('User not found');
+    }
+    await this.userRepository.update({ id }, dto);
+    return { message: 'User updated successfully' };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    if (!(await this.userRepository.existsBy({ id }))) {
+      throw new NotFoundException('User not found');
+    }
+    await this.userRepository.delete({ id });
+    return { message: 'User deleted successfully' };
   }
 }

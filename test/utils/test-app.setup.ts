@@ -22,6 +22,7 @@ import { StockEntryDelivery } from '../../src/modules/stock-entry/entities/stock
 import { StockExit } from '../../src/modules/stock-exit/entities/stock-exit.entity';
 import { File } from '../../src/modules/file/entities/file.entity';
 import { BnrApiHistory } from '../../src/modules/bnr-api/entities/bnr-api-history.entity';
+import { AuthRefreshToken } from '../../src/modules/auth/entities/auth-refresh-token.entity';
 
 import { CustomerOfferService } from '../../src/modules/customer-offer/customer-offer.service';
 import { CustomerOfferRepository } from '../../src/modules/customer-offer/repositories/customer-offer.repository';
@@ -51,6 +52,7 @@ const ALL_ENTITIES = [
   StockExit,
   File,
   BnrApiHistory,
+  AuthRefreshToken,
 ];
 
 export async function createTestApp(
