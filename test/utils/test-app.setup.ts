@@ -31,6 +31,8 @@ import { SupplierOrderService } from '../../src/modules/supplier-order/supplier-
 import { SupplierOrderRepository } from '../../src/modules/supplier-order/repositories/supplier-order.repository';
 import { SupplierOrderRowRepository } from '../../src/modules/supplier-order/repositories/supplier-order-row.repository';
 import { StockEntryDeliveryRepository } from '../../src/modules/supplier-order/repositories/stock-entry-delivery.repository';
+import { FileService } from '../../src/modules/file/file.service';
+import { FileRepository } from '../../src/modules/file/repositories/file.repository';
 
 const ALL_ENTITIES = [
   User,
@@ -81,6 +83,8 @@ export async function createTestApp(
       SupplierOrderRepository,
       SupplierOrderRowRepository,
       StockEntryDeliveryRepository,
+      FileService,
+      FileRepository,
     ],
   }).compile();
 

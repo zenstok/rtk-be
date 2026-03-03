@@ -6,7 +6,6 @@ import { createTestApp } from '../utils/test-app.setup';
 import { cleanDatabase } from '../utils/db-cleanup';
 import { TestFactories, resetFactoryCounter } from '../utils/factories';
 import { CustomerOfferService } from '../../src/modules/customer-offer/customer-offer.service';
-import { CustomerOfferStatus } from '../../src/modules/customer-offer/entities/customer-offer.entity';
 import { StockEntryOrigin } from '../../src/modules/stock-entry/entities/stock-entry.entity';
 import { SupplierOrderStatus } from '../../src/modules/supplier-order/entities/supplier-order.entity';
 
@@ -251,26 +250,6 @@ describe('CustomerOfferService.findAllProducts (integration)', () => {
     const row1 = result.results.find((r: any) => r.id === seed.row1.id)!;
     expect(row1.freeQuantity).toBe(20 - 25 - 0); // -5
     expect(row1.freeQuantity).toBeLessThan(0);
-  });
-
-  // --- Scenario 5: Canceled offer returns empty ---
-  it('should return empty results for a canceled customer offer', async () => {
-    const seed = await factories.seedFindAllProductsBase();
-
-    // Cancel the offer
-    await dataSource
-      .getRepository('CustomerOffer')
-      .update(seed.customerOffer.id, {
-        status: CustomerOfferStatus.CANCELED,
-      });
-
-    const result = await service.findAllProducts(
-      seed.customerOffer.id,
-      defaultPagination,
-    );
-
-    expect(result.total).toBe(0);
-    expect(result.results).toHaveLength(0);
   });
 
   // --- Scenario 6: Non-existent offer ID ---

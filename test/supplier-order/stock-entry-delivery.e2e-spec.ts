@@ -154,6 +154,10 @@ describe('SupplierOrderService stock entry delivery (integration)', () => {
 
       const result = await service.finalizeStockEntryDelivery(delivery.id, {
         serialNumbers: ['SN-001', 'SN-002', 'SN-003'],
+        shipmentDate: '2026-02-01',
+        supplierInvoiceNumber: 'INV-001',
+        supplierInvoiceDate: '2026-02-01',
+        supplierCurrencyToRonExchangeRate: 4.95,
       });
 
       expect(result.stockEntriesCreated).toBe(3);
@@ -186,6 +190,10 @@ describe('SupplierOrderService stock entry delivery (integration)', () => {
 
       await service.finalizeStockEntryDelivery(delivery.id, {
         serialNumbers: ['SN-RES-A', 'SN-RES-B'],
+        shipmentDate: '2026-02-01',
+        supplierInvoiceNumber: 'INV-002',
+        supplierInvoiceDate: '2026-02-01',
+        supplierCurrencyToRonExchangeRate: 4.95,
       });
 
       const seRepo = dataSource.getRepository(StockEntry);
@@ -207,6 +215,10 @@ describe('SupplierOrderService stock entry delivery (integration)', () => {
 
       await service.finalizeStockEntryDelivery(delivery.id, {
         serialNumbers: ['SN-SHIP'],
+        shipmentDate: '2026-02-01',
+        supplierInvoiceNumber: 'INV-003',
+        supplierInvoiceDate: '2026-02-01',
+        supplierCurrencyToRonExchangeRate: 4.95,
       });
 
       const sedRepo = dataSource.getRepository(StockEntryDelivery);
@@ -248,11 +260,19 @@ describe('SupplierOrderService stock entry delivery (integration)', () => {
 
       await service.finalizeStockEntryDelivery(delivery.id, {
         serialNumbers: ['SN-FIRST'],
+        shipmentDate: '2026-02-01',
+        supplierInvoiceNumber: 'INV-004',
+        supplierInvoiceDate: '2026-02-01',
+        supplierCurrencyToRonExchangeRate: 4.95,
       });
 
       await expect(
         service.finalizeStockEntryDelivery(delivery.id, {
           serialNumbers: ['SN-SECOND'],
+          shipmentDate: '2026-02-01',
+          supplierInvoiceNumber: 'INV-005',
+          supplierInvoiceDate: '2026-02-01',
+          supplierCurrencyToRonExchangeRate: 4.95,
         }),
       ).rejects.toThrow('already been finalized');
     });

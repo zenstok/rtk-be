@@ -48,6 +48,10 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
       unitPrice: number;
       orderedQuantity: number;
     }[],
+    reservations?: {
+      suppliersProductCatalogId: number;
+      serialNumbers: string[];
+    }[],
   ) {
     return {
       customerOfferId,
@@ -67,6 +71,7 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
       otherInstructions: '',
       assignedUserId: userId,
       rows,
+      ...(reservations && { reservations }),
     };
   }
 
@@ -111,13 +116,24 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
     ]);
 
     const result = await service.createWithReservation(
-      baseDto(seed.customerOffer.id, seed.supplier.id, seed.user.id, [
-        {
-          suppliersProductCatalogId: seed.spc1.id,
-          unitPrice: 100,
-          orderedQuantity: 5,
-        },
-      ]),
+      baseDto(
+        seed.customerOffer.id,
+        seed.supplier.id,
+        seed.user.id,
+        [
+          {
+            suppliersProductCatalogId: seed.spc1.id,
+            unitPrice: 100,
+            orderedQuantity: 5,
+          },
+        ],
+        [
+          {
+            suppliersProductCatalogId: seed.spc1.id,
+            serialNumbers: ['FREE-A', 'FREE-B', 'FREE-C'],
+          },
+        ],
+      ),
     );
 
     expect(result.id).toBeDefined();
@@ -184,13 +200,24 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
     const newOffer = await factories.createCustomerOffer(pa.id, customer2.id);
 
     await service.createWithReservation(
-      baseDto(newOffer.id, seed.supplier.id, seed.user.id, [
-        {
-          suppliersProductCatalogId: seed.spc1.id,
-          unitPrice: 100,
-          orderedQuantity: 5,
-        },
-      ]),
+      baseDto(
+        newOffer.id,
+        seed.supplier.id,
+        seed.user.id,
+        [
+          {
+            suppliersProductCatalogId: seed.spc1.id,
+            unitPrice: 100,
+            orderedQuantity: 5,
+          },
+        ],
+        [
+          {
+            suppliersProductCatalogId: seed.spc1.id,
+            serialNumbers: ['SIMPLE-FREE'],
+          },
+        ],
+      ),
     );
 
     // Only the free entry should be reserved to the new offer
@@ -243,18 +270,33 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
     await createFreeStockEntries(seed, seed.spc2.id, ['P2-FREE-A']);
 
     await service.createWithReservation(
-      baseDto(seed.customerOffer.id, seed.supplier.id, seed.user.id, [
-        {
-          suppliersProductCatalogId: seed.spc1.id,
-          unitPrice: 100,
-          orderedQuantity: 5,
-        },
-        {
-          suppliersProductCatalogId: seed.spc2.id,
-          unitPrice: 200,
-          orderedQuantity: 3,
-        },
-      ]),
+      baseDto(
+        seed.customerOffer.id,
+        seed.supplier.id,
+        seed.user.id,
+        [
+          {
+            suppliersProductCatalogId: seed.spc1.id,
+            unitPrice: 100,
+            orderedQuantity: 5,
+          },
+          {
+            suppliersProductCatalogId: seed.spc2.id,
+            unitPrice: 200,
+            orderedQuantity: 3,
+          },
+        ],
+        [
+          {
+            suppliersProductCatalogId: seed.spc1.id,
+            serialNumbers: ['P1-FREE-A', 'P1-FREE-B'],
+          },
+          {
+            suppliersProductCatalogId: seed.spc2.id,
+            serialNumbers: ['P2-FREE-A'],
+          },
+        ],
+      ),
     );
 
     const seRepo = dataSource.getRepository(StockEntry);
