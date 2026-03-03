@@ -22,11 +22,6 @@ export class StockExitController {
     return this.stockExitService.create(createStockExitDto);
   }
 
-  @Get()
-  findAll() {
-    return this.stockExitService.findAll();
-  }
-
   @Get('by-customer-offer-id/:customerOfferId')
   findAllByCustomerOfferId(
     @Param('customerOfferId') customerOfferId: number,

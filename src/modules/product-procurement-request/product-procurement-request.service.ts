@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateProductProcurementRequestDto } from './dto/create-product-procurement-request.dto';
 import { UpdateProductProcurementRequestDto } from './dto/update-product-procurement-request.dto';
-import { ProductProcurementRequestRepository } from './repositories/product-procurement-request.repository';
 import {
   ProductProcurementRequest,
   ProductProcurementRequestStatus,
@@ -49,7 +49,8 @@ const OFFER_TO_PPR_STATUS: Record<
 @Injectable()
 export class ProductProcurementRequestService {
   constructor(
-    private readonly pprRepository: ProductProcurementRequestRepository,
+    @InjectRepository(ProductProcurementRequest)
+    private readonly pprRepository: Repository<ProductProcurementRequest>,
     private readonly dataSource: DataSource,
   ) {}
 

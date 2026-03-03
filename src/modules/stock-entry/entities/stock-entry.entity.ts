@@ -37,7 +37,7 @@ export class StockEntry {
   origin: StockEntryOrigin;
 
   @Column({ name: 'customer_offer_id', nullable: true })
-  customerOfferId?: number;
+  customerOfferId: number | null;
 
   @ManyToOne(
     () => CustomerOffer,

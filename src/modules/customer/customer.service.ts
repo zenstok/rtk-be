@@ -1,19 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { CreateCustomerContactPersonDto } from './dto/create-customer-contact-person.dto';
 import { UpdateCustomerContactPersonDto } from './dto/update-customer-contact-person.dto';
-import { CustomerRepository } from './repositories/customer.repository';
-import { CustomerContactPersonRepository } from './repositories/customer-contact-person.repository';
+import { Customer } from './entities/customer.entity';
+import { CustomerContactPerson } from './entities/customer-contact-person.entity';
 import { FindDto } from '../../utils/dtos/find.dto';
 import { FindCustomerDto } from './dto/find-customer.dto';
-import { ILike } from 'typeorm';
 
 @Injectable()
 export class CustomerService {
   constructor(
-    private readonly customerRepository: CustomerRepository,
-    private readonly customerContactPersonRepository: CustomerContactPersonRepository,
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(CustomerContactPerson)
+    private readonly customerContactPersonRepository: Repository<CustomerContactPerson>,
   ) {}
 
   async create(dto: CreateCustomerDto) {

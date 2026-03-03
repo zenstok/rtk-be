@@ -3,12 +3,11 @@ import { SuppliersProductCatalogService } from './suppliers-product-catalog.serv
 import { SuppliersProductCatalogController } from './suppliers-product-catalog.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SuppliersProductCatalog } from './entities/suppliers-product-catalog.entity';
-import { SupplierProductCatalogRepository } from './repositories/supplier-product-catalog.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SuppliersProductCatalog])],
   controllers: [SuppliersProductCatalogController],
-  providers: [SuppliersProductCatalogService, SupplierProductCatalogRepository],
-  exports: [SuppliersProductCatalogService, SupplierProductCatalogRepository],
+  providers: [SuppliersProductCatalogService],
+  exports: [SuppliersProductCatalogService],
 })
 export class SuppliersProductCatalogModule {}

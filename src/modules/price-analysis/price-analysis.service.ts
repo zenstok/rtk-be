@@ -10,14 +10,13 @@ import { UpdatePriceAnalysisSupplierGroupDto } from './dto/update-price-analysis
 import { CreatePriceAnalysisRowDto } from './dto/create-price-analysis-row.dto';
 import { UpdatePriceAnalysisRowDto } from './dto/update-price-analysis-row.dto';
 import { FindPriceAnalysisDto } from './dto/find-price-analysis.dto';
-import { PriceAnalysisRepository } from './repositories/price-analysis.repository';
-import { PriceAnalysisSupplierGroupRepository } from './repositories/price-analysis-supplier-group.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { PriceAnalysisRowRepository } from './repositories/price-analysis-row.repository';
 import { BnrApiService } from '../bnr-api/bnr-api.service';
 import { PriceAnalysis } from './entities/price-analysis.entity';
 import { PriceAnalysisSupplierGroup } from './entities/price-analysis-supplier-group.entity';
 import { PriceAnalysisRow } from './entities/price-analysis-row.entity';
-import { DataSource, In } from 'typeorm';
 import {
   CustomerOffer,
   CustomerOfferStatus,
@@ -26,8 +25,10 @@ import {
 @Injectable()
 export class PriceAnalysisService {
   constructor(
-    private readonly priceAnalysisRepository: PriceAnalysisRepository,
-    private readonly supplierGroupRepository: PriceAnalysisSupplierGroupRepository,
+    @InjectRepository(PriceAnalysis)
+    private readonly priceAnalysisRepository: Repository<PriceAnalysis>,
+    @InjectRepository(PriceAnalysisSupplierGroup)
+    private readonly supplierGroupRepository: Repository<PriceAnalysisSupplierGroup>,
     private readonly rowRepository: PriceAnalysisRowRepository,
     private readonly bnrApiService: BnrApiService,
     private readonly dataSource: DataSource,

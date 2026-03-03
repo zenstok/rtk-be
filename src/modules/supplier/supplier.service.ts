@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, ILike } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { CreateSupplierContactPersonDto } from './dto/create-supplier-contact-person.dto';
 import { UpdateSupplierContactPersonDto } from './dto/update-supplier-contact-person.dto';
-import { SupplierRepository } from './repositories/supplier.repository';
-import { SupplierContactPersonRepository } from './repositories/supplier-contact-person.repository';
 import { Supplier } from './entities/supplier.entity';
 import { SupplierContactPerson } from './entities/supplier-contact-person.entity';
 import { FindDto } from '../../utils/dtos/find.dto';
@@ -14,8 +13,10 @@ import { FindSupplierDto } from './dto/find-supplier.dto';
 @Injectable()
 export class SupplierService {
   constructor(
-    private readonly supplierRepository: SupplierRepository,
-    private readonly supplierContactPersonRepository: SupplierContactPersonRepository,
+    @InjectRepository(Supplier)
+    private readonly supplierRepository: Repository<Supplier>,
+    @InjectRepository(SupplierContactPerson)
+    private readonly supplierContactPersonRepository: Repository<SupplierContactPerson>,
     private readonly dataSource: DataSource,
   ) {}
 

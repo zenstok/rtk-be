@@ -3,15 +3,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateSuppliersProductCatalogDto } from './dto/create-suppliers-product-catalog.dto';
 import { UpdateSuppliersProductCatalogDto } from './dto/update-suppliers-product-catalog.dto';
-import { SupplierProductCatalogRepository } from './repositories/supplier-product-catalog.repository';
+import { SuppliersProductCatalog } from './entities/suppliers-product-catalog.entity';
 import { FindDto } from '../../utils/dtos/find.dto';
 
 @Injectable()
 export class SuppliersProductCatalogService {
   constructor(
-    private readonly catalogRepository: SupplierProductCatalogRepository,
+    @InjectRepository(SuppliersProductCatalog)
+    private readonly catalogRepository: Repository<SuppliersProductCatalog>,
   ) {}
 
   async create(dto: CreateSuppliersProductCatalogDto) {

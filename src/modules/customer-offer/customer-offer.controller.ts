@@ -10,6 +10,7 @@ import {
   Header,
 } from '@nestjs/common';
 import { CustomerOfferService } from './customer-offer.service';
+import { CustomerOfferPdfService } from './customer-offer-pdf.service';
 import { CreateCustomerOfferDto } from './dto/create-customer-offer.dto';
 import { UpdateCustomerOfferDto } from './dto/update-customer-offer.dto';
 import { CreateCustomerOfferStockExitDto } from './dto/create-customer-offer-stock-exit.dto';
@@ -20,7 +21,10 @@ import { FindDto } from '../../utils/dtos/find.dto';
 
 @Controller('customer-offer')
 export class CustomerOfferController {
-  constructor(private readonly customerOfferService: CustomerOfferService) {}
+  constructor(
+    private readonly customerOfferService: CustomerOfferService,
+    private readonly customerOfferPdfService: CustomerOfferPdfService,
+  ) {}
 
   // find all reserved stock entries (find all stock entries with customer offer id = current customer offer)
   // find all UNRESERVED stock entries by product (unreserved stock entry = stock entry with NULL customer offer and NULL stock exit)
@@ -49,7 +53,7 @@ export class CustomerOfferController {
   @Get(':id/download')
   @Header('Content-Type', 'application/pdf')
   download(@Param('id') id: number) {
-    return this.customerOfferService.download(id);
+    return this.customerOfferPdfService.download(id);
   }
 
   @Get(':id/download-confirmed-customer-order')

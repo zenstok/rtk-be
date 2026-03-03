@@ -10,6 +10,7 @@ import {
   Header,
 } from '@nestjs/common';
 import { SupplierOrderService } from './supplier-order.service';
+import { SupplierOrderPdfService } from './supplier-order-pdf.service';
 import { CreateSupplierOrderDto } from './dto/create-supplier-order.dto';
 import { UpdateSupplierOrderDto } from './dto/update-supplier-order.dto';
 import { CreateStockEntryDeliveryDto } from './dto/create-stock-entry-delivery.dto';
@@ -23,7 +24,10 @@ import { FindSupplierOrderDto } from './dto/find-supplier-order.dto';
 
 @Controller('supplier-order')
 export class SupplierOrderController {
-  constructor(private readonly supplierOrderService: SupplierOrderService) {}
+  constructor(
+    private readonly supplierOrderService: SupplierOrderService,
+    private readonly supplierOrderPdfService: SupplierOrderPdfService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateSupplierOrderDto) {
@@ -70,7 +74,7 @@ export class SupplierOrderController {
   @Get(':id/download')
   @Header('Content-Type', 'application/pdf')
   download(@Param('id') id: number) {
-    return this.supplierOrderService.download(id);
+    return this.supplierOrderPdfService.download(id);
   }
 
   @Get(':id/products')

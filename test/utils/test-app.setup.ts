@@ -28,11 +28,7 @@ import { CustomerOfferService } from '../../src/modules/customer-offer/customer-
 import { CustomerOfferRepository } from '../../src/modules/customer-offer/repositories/customer-offer.repository';
 import { PriceAnalysisRowRepository } from '../../src/modules/price-analysis/repositories/price-analysis-row.repository';
 import { SupplierOrderService } from '../../src/modules/supplier-order/supplier-order.service';
-import { SupplierOrderRepository } from '../../src/modules/supplier-order/repositories/supplier-order.repository';
-import { SupplierOrderRowRepository } from '../../src/modules/supplier-order/repositories/supplier-order-row.repository';
-import { StockEntryDeliveryRepository } from '../../src/modules/supplier-order/repositories/stock-entry-delivery.repository';
 import { FileService } from '../../src/modules/file/file.service';
-import { FileRepository } from '../../src/modules/file/repositories/file.repository';
 
 const ALL_ENTITIES = [
   User,
@@ -80,11 +76,7 @@ export async function createTestApp(
       CustomerOfferRepository,
       PriceAnalysisRowRepository,
       SupplierOrderService,
-      SupplierOrderRepository,
-      SupplierOrderRowRepository,
-      StockEntryDeliveryRepository,
       FileService,
-      FileRepository,
     ],
   }).compile();
 

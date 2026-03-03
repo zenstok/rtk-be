@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CustomerOfferService } from './customer-offer.service';
+import { CustomerOfferPdfService } from './customer-offer-pdf.service';
 import { CustomerOfferController } from './customer-offer.controller';
 import { CustomerOfferRepository } from './repositories/customer-offer.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -17,6 +18,6 @@ import { PriceAnalysis } from '../price-analysis/entities/price-analysis.entity'
     FileModule,
   ],
   controllers: [CustomerOfferController],
-  providers: [CustomerOfferService, CustomerOfferRepository],
+  providers: [CustomerOfferService, CustomerOfferPdfService, CustomerOfferRepository],
 })
 export class CustomerOfferModule {}

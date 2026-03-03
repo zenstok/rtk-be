@@ -9,6 +9,10 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Role } from '../../auth/constants/role.enum';
+import {
+  PASSWORD_REGEX,
+  PASSWORD_REGEX_MESSAGE,
+} from '../../../utils/constants/password';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -21,10 +25,7 @@ export class CreateUserDto {
   @IsString()
   @MinLength(8)
   @MaxLength(100)
-  @Matches(/((?=.*\d)(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message:
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-  })
+  @Matches(PASSWORD_REGEX, { message: PASSWORD_REGEX_MESSAGE })
   password: string;
 
   @ApiProperty({ enum: Role })

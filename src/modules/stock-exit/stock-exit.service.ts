@@ -3,22 +3,23 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateStockExitDto } from './dto/create-stock-exit.dto';
 import { UpdateStockExitDto } from './dto/update-stock-exit.dto';
 import { FindDto } from '../../utils/dtos/find.dto';
-import { StockExitRepository } from './repositories/stock-exit.repository';
-import { DataSource } from 'typeorm';
+import { StockExit, StockExitSource } from './entities/stock-exit.entity';
 import {
   StockEntry,
   StockEntryOrigin,
 } from '../stock-entry/entities/stock-entry.entity';
 import { Customer } from '../customer/entities/customer.entity';
-import { StockExitSource } from './entities/stock-exit.entity';
 
 @Injectable()
 export class StockExitService {
   constructor(
-    private readonly stockExitRepository: StockExitRepository,
+    @InjectRepository(StockExit)
+    private readonly stockExitRepository: Repository<StockExit>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -101,10 +102,6 @@ export class StockExitService {
     });
 
     return this.stockExitRepository.save(stockExit);
-  }
-
-  findAll() {
-    return `This action returns all stockExit`;
   }
 
   async findAllByCustomerOfferId(customerOfferId: number, dto: FindDto) {

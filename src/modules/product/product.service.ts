@@ -4,14 +4,14 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductRepository } from './repositories/product.repository';
-import { ProductCategoryRepository } from './repositories/product-category.repository';
+import { Product } from './entities/product.entity';
+import { ProductCategory } from './entities/product-category.entity';
 import { FindDto } from '../../utils/dtos/find.dto';
 import { FindProductDto } from './dto/find-product.dto';
-import { ILike } from 'typeorm';
 import { SuppliersProductCatalogService } from '../suppliers-product-catalog/suppliers-product-catalog.service';
 import { CreateSuppliersProductCatalogDto } from '../suppliers-product-catalog/dto/create-suppliers-product-catalog.dto';
 import { StockEntry } from '../stock-entry/entities/stock-entry.entity';
@@ -20,8 +20,10 @@ import { StockExit } from '../stock-exit/entities/stock-exit.entity';
 @Injectable()
 export class ProductService {
   constructor(
-    private readonly productRepository: ProductRepository,
-    private readonly productCategoryRepository: ProductCategoryRepository,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+    @InjectRepository(ProductCategory)
+    private readonly productCategoryRepository: Repository<ProductCategory>,
     private readonly catalogService: SuppliersProductCatalogService,
     private readonly dataSource: DataSource,
   ) {}

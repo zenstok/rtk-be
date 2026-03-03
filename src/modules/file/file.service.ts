@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
-import { FileRepository } from './repositories/file.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateFileDto } from './dto/create-file.dto';
 import { File } from './entities/file.entity';
 import { User } from '../user/entities/user.entity';
@@ -8,7 +9,10 @@ import { createReadStream } from 'fs';
 
 @Injectable()
 export class FileService {
-  constructor(private readonly fileRepository: FileRepository) {}
+  constructor(
+    @InjectRepository(File)
+    private readonly fileRepository: Repository<File>,
+  ) {}
 
   create(dto: CreateFileDto, uploader: User): Promise<File> {
     return this.fileRepository.save(
