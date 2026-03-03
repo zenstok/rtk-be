@@ -76,35 +76,34 @@ export class StockExit {
   @Column({ name: 'product_localization' })
   productLocalization: string; // la rtk/la client/nespecificat (Se fac statistici sa vezi cate sunt la rtk, cate la client etc)
 
-  @Column({ name: 'observations' })
+  @Column({ name: 'observations', nullable: true })
   observations: string;
 
-  @Column({ name: 'declaration_of_conformity_number' })
+  @Column({ name: 'declaration_of_conformity_number', nullable: true })
   declarationOfConformityNumber: string;
 
-  @Column({ name: 'declaration_of_conformity_date' })
+  @Column({ name: 'declaration_of_conformity_date', nullable: true })
   declarationOfConformityDate: Date;
 
-  // we dont care if these fields are right, first we init with a version that works and shows the flow
-  @Column({ name: 'handover_reception_report_number' })
+  @Column({ name: 'handover_reception_report_number', nullable: true })
   handoverReceptionReportNumber: string;
 
-  @Column({ name: 'handover_reception_report_date' })
+  @Column({ name: 'handover_reception_report_date', nullable: true })
   handoverReceptionReportDate: Date;
 
-  @Column({ name: 'warranty_quality_certificate_number' })
+  @Column({ name: 'warranty_quality_certificate_number', nullable: true })
   warrantyQualityCertificateNumber: string;
 
-  @Column({ name: 'warranty_quality_certificate_date' })
+  @Column({ name: 'warranty_quality_certificate_date', nullable: true })
   warrantyQualityCertificateDate: Date;
 
-  @Column({ name: 'warranty_status' })
+  @Column({ name: 'warranty_status', nullable: true })
   warrantyStatus: string; // 'Under Warranty' | 'Post-Warranty'
 
-  @Column({ name: 'warranty_expiration_date' })
+  @Column({ name: 'warranty_expiration_date', nullable: true })
   warrantyExpirationDate: Date;
 
-  @Column({ name: 'physically_delivered' })
+  @Column({ name: 'physically_delivered', nullable: true, default: false })
   physicallyDelivered: boolean;
 
   @Column({ name: 'custody_report_number', nullable: true })

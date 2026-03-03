@@ -98,9 +98,7 @@ describe('AuthService (integration)', () => {
     jest.clearAllMocks();
   });
 
-  async function createTestUser(
-    overrides: Partial<User> = {},
-  ): Promise<User> {
+  async function createTestUser(overrides: Partial<User> = {}): Promise<User> {
     const repo = dataSource.getRepository(User);
     const hashedPassword = await bcrypt.hash('Password1!', 12);
     return repo.save(
@@ -164,7 +162,10 @@ describe('AuthService (integration)', () => {
         existingTotal += Date.now() - start1;
 
         const start2 = Date.now();
-        await authService.validateUser('nonexistent@example.com', 'WrongPass1!');
+        await authService.validateUser(
+          'nonexistent@example.com',
+          'WrongPass1!',
+        );
         nonExistentTotal += Date.now() - start2;
       }
 
@@ -305,7 +306,9 @@ describe('AuthService (integration)', () => {
 
       // Old refresh token should be blacklisted now
       const blacklistedRepo = dataSource.getRepository(AuthRefreshToken);
-      const blacklisted = await blacklistedRepo.find({ where: { userId: user.id } });
+      const blacklisted = await blacklistedRepo.find({
+        where: { userId: user.id },
+      });
       expect(blacklisted.length).toBe(1);
     });
 
@@ -345,7 +348,9 @@ describe('AuthService (integration)', () => {
       });
 
       expect(result).toContain('If your email address is found');
-      expect(mockMailService.sendResetPasswordConfirmationQueued).toHaveBeenCalled();
+      expect(
+        mockMailService.sendResetPasswordConfirmationQueued,
+      ).toHaveBeenCalled();
     });
 
     it('should return same generic message for non-existent user (prevents enumeration)', async () => {
@@ -354,7 +359,9 @@ describe('AuthService (integration)', () => {
       });
 
       expect(result).toContain('If your email address is found');
-      expect(mockMailService.sendResetPasswordConfirmationQueued).not.toHaveBeenCalled();
+      expect(
+        mockMailService.sendResetPasswordConfirmationQueued,
+      ).not.toHaveBeenCalled();
     });
 
     it('should swallow mail errors to prevent user enumeration', async () => {

@@ -122,10 +122,7 @@ describe('SupplierOrderService stock entry delivery (integration)', () => {
         seed.user.id,
         seed.user.id,
       );
-      const sor = await factories.createSupplierOrderRow(
-        so1.id,
-        seed.spc1.id,
-      );
+      const sor = await factories.createSupplierOrderRow(so1.id, seed.spc1.id);
 
       // Try to create delivery on so2 but with sor from so1
       await expect(
@@ -180,11 +177,9 @@ describe('SupplierOrderService stock entry delivery (integration)', () => {
         seed.user.id,
         { customerOfferId: seed.customerOffer.id },
       );
-      const sor = await factories.createSupplierOrderRow(
-        so.id,
-        seed.spc1.id,
-        { orderedQuantity: 2 },
-      );
+      const sor = await factories.createSupplierOrderRow(so.id, seed.spc1.id, {
+        orderedQuantity: 2,
+      });
       const delivery = await factories.createStockEntryDelivery(sor.id, {
         quantity: 2,
       });

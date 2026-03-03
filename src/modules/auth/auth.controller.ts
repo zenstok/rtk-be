@@ -18,6 +18,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ConfirmResetPasswordDto } from './dto/confirm-reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { User } from '../user/entities/user.entity';
 
 @ApiTags('Auth')
@@ -49,7 +50,7 @@ export class AuthController {
       attributes: User;
       refreshTokenExpiresAt: Date;
     };
-    const authHeader = req.headers.authorization as string | undefined;
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new BadRequestException('Invalid authorization header format');
     }
@@ -73,5 +74,12 @@ export class AuthController {
   @Post('confirm-reset-password')
   resetPassword(@Body() dto: ConfirmResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Throttle({ short: { limit: 3, ttl: 1000 }, long: { limit: 5, ttl: 60000 } })
+  @ApiBearerAuth()
+  @Post('change-password')
+  changePassword(@CurrentUser() user: User, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(user.id, dto);
   }
 }

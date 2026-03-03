@@ -4,10 +4,11 @@ import {
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
-import { DataSource, In } from 'typeorm';
+import { DataSource, In, IsNull } from 'typeorm';
 import { CreateSupplierOrderDto } from './dto/create-supplier-order.dto';
 import { UpdateSupplierOrderDto } from './dto/update-supplier-order.dto';
 import { CreateStockEntryDeliveryDto } from './dto/create-stock-entry-delivery.dto';
+import { UpdateStockEntryDeliveryDto } from './dto/update-stock-entry-delivery.dto';
 import { FinalizeStockEntryDeliveryDto } from './dto/finalize-stock-entry-delivery.dto';
 import { CreateSupplierOrderWithReservationDto } from './dto/create-supplier-order-with-reservation.dto';
 import { SupplierOrderRepository } from './repositories/supplier-order.repository';
@@ -24,6 +25,7 @@ import {
   StockEntryOrigin,
 } from '../stock-entry/entities/stock-entry.entity';
 import { FindDto } from '../../utils/dtos/find.dto';
+import { FindSupplierOrderDto } from './dto/find-supplier-order.dto';
 import PDFDocument = require('pdfkit');
 
 @Injectable()
@@ -58,6 +60,13 @@ export class SupplierOrderService {
       }
     }
 
+    const spcIds = dto.rows.map((r) => r.suppliersProductCatalogId);
+    if (new Set(spcIds).size !== spcIds.length) {
+      throw new BadRequestException(
+        'Produse duplicate in randurile comenzii furnizor.',
+      );
+    }
+
     return this.dataSource.transaction(async (manager) => {
       const { rows, ...orderFields } = dto;
 
@@ -81,19 +90,22 @@ export class SupplierOrderService {
     });
   }
 
-  async findAll(dto: FindDto) {
-    const [results, total] = await this.supplierOrderRepository.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: dto.offset,
-      take: dto.limit > 0 ? dto.limit : undefined,
-    });
+  async findAll(dto: FindSupplierOrderDto, customerOfferId?: number) {
+    const where: Record<string, unknown> = {};
+    if (customerOfferId != null) {
+      where.customerOfferId = customerOfferId;
+    }
+    if (dto.status) {
+      where.status = dto.status;
+    }
 
-    return { results, total };
-  }
-
-  async findAllByCustomerOfferId(customerOfferId: number, dto: FindDto) {
     const [results, total] = await this.supplierOrderRepository.findAndCount({
-      where: { customerOfferId },
+      where: Object.keys(where).length > 0 ? where : undefined,
+      relations: {
+        supplier: true,
+        userInCharge: true,
+        assignedUser: true,
+      },
       order: { createdAt: 'DESC' },
       skip: dto.offset,
       take: dto.limit > 0 ? dto.limit : undefined,
@@ -147,53 +159,119 @@ export class SupplierOrderService {
     return { message: 'Supplier order canceled successfully' };
   }
 
+  private static readonly STATUS_ORDER: SupplierOrderStatus[] = [
+    SupplierOrderStatus.CREATED,
+    SupplierOrderStatus.VALIDATED,
+    SupplierOrderStatus.SENT_TO_SUPPLIER,
+    SupplierOrderStatus.IN_DELIVERY,
+    SupplierOrderStatus.DELIVERED,
+  ];
+
+  async updateStatus(id: number, newStatus: SupplierOrderStatus) {
+    const order = await this.supplierOrderRepository.findOneBy({ id });
+    if (!order) {
+      throw new NotFoundException('Supplier order not found');
+    }
+    if (order.status === SupplierOrderStatus.CANCELED) {
+      throw new BadRequestException('Cannot change status of a canceled order');
+    }
+    if (newStatus === SupplierOrderStatus.CANCELED) {
+      throw new BadRequestException(
+        'Use the cancel endpoint to cancel an order',
+      );
+    }
+
+    const currentIndex =
+      SupplierOrderService.STATUS_ORDER.indexOf(order.status);
+    const newIndex = SupplierOrderService.STATUS_ORDER.indexOf(newStatus);
+
+    if (newIndex < 0) {
+      throw new BadRequestException('Invalid target status');
+    }
+    if (newIndex <= currentIndex) {
+      throw new BadRequestException(
+        'Status can only be advanced forward, not backwards',
+      );
+    }
+
+    await this.supplierOrderRepository.update({ id }, { status: newStatus });
+    return { message: 'Supplier order status updated successfully' };
+  }
+
+  async updateRowPrice(rowId: number, unitPrice: number) {
+    const row = await this.supplierOrderRowRepository.findOne({
+      where: { id: rowId },
+      relations: { supplierOrder: true },
+    });
+    if (!row) {
+      throw new NotFoundException('Supplier order row not found');
+    }
+    if (row.supplierOrder?.status !== SupplierOrderStatus.CREATED) {
+      throw new BadRequestException(
+        'Prices can only be modified while the order is in CREATED status',
+      );
+    }
+
+    await this.supplierOrderRowRepository.update({ id: rowId }, { unitPrice });
+    return { message: 'Row price updated successfully' };
+  }
+
   async findProducts(id: number, dto: FindDto) {
     const order = await this.supplierOrderRepository.findOneBy({ id });
     if (!order) {
       throw new NotFoundException('Supplier order not found');
     }
 
-    const createBaseQuery = () =>
-      this.supplierOrderRowRepository
-        .createQueryBuilder('sor')
-        .innerJoin('sor.suppliersProductCatalog', 'spc')
-        .innerJoin('spc.product', 'p')
-        .where('sor.supplier_order_id = :supplierOrderId', {
-          supplierOrderId: id,
-        });
+    const [rows, total] = await this.supplierOrderRowRepository.findAndCount({
+      where: { supplierOrderId: id },
+      relations: { suppliersProductCatalog: { product: true } },
+      order: { id: 'ASC' },
+      skip: dto.offset,
+      take: dto.limit > 0 ? dto.limit : undefined,
+    });
 
-    const total = await createBaseQuery().getCount();
+    const rowIds = rows.map((row) => row.id);
+    const deliveries = rowIds.length
+      ? await this.stockEntryDeliveryRepository.find({
+          where: { supplierOrderRowId: In(rowIds) },
+          relations: { warrantyFile: true, handoverFile: true },
+          order: { estimatedShipmentDate: 'ASC', id: 'ASC' },
+        })
+      : [];
 
-    const results = await createBaseQuery()
-      .select([
-        'sor.id AS "id"',
-        'sor.suppliers_product_catalog_id AS "suppliersProductCatalogId"',
-        'sor.unit_price AS "unitPrice"',
-        'sor.ordered_quantity AS "orderedQuantity"',
-        'p.name AS "productName"',
-        'p.manufacturer_code AS "manufacturerCode"',
-      ])
-      .addSelect(
-        `COALESCE((
-          SELECT SUM(sed.quantity)
-          FROM stock_entry_deliveries sed
-          WHERE sed.supplier_order_row_id = sor.id
-          AND sed.shipment_date IS NOT NULL
-        ), 0)`,
-        'deliveredQuantity',
-      )
-      .offset(dto.offset)
-      .limit(dto.limit > 0 ? dto.limit : undefined)
-      .getRawMany();
+    const deliveriesByRowId = new Map<number, StockEntryDelivery[]>();
+    for (const delivery of deliveries) {
+      const existing = deliveriesByRowId.get(delivery.supplierOrderRowId) ?? [];
+      existing.push(delivery);
+      deliveriesByRowId.set(delivery.supplierOrderRowId, existing);
+    }
 
     return {
-      results: results.map((row) => ({
-        ...row,
-        orderedQuantity: Number(row.orderedQuantity),
-        deliveredQuantity: Number(row.deliveredQuantity),
-        undeliveredQuantity:
-          Number(row.orderedQuantity) - Number(row.deliveredQuantity),
-      })),
+      results: rows.map((row) => {
+        const rowDeliveries = (deliveriesByRowId.get(row.id) ?? []).map(
+          (delivery) => ({
+            ...delivery,
+            quantity: Number(delivery.quantity),
+            isShipped: delivery.isShipped(),
+          }),
+        );
+
+        const deliveredQuantity = rowDeliveries.reduce(
+          (sum, delivery) =>
+            delivery.shipmentDate ? sum + Number(delivery.quantity) : sum,
+          0,
+        );
+        const orderedQuantity = Number(row.orderedQuantity);
+
+        return {
+          ...row,
+          unitPrice: Number(row.unitPrice),
+          orderedQuantity,
+          supplierOrderDeliveries: rowDeliveries,
+          deliveredQuantity,
+          undeliveredQuantity: orderedQuantity - deliveredQuantity,
+        };
+      }),
       total,
     };
   }
@@ -245,7 +323,10 @@ export class SupplierOrderService {
       ? new Date(order.orderAcknowledgmentDate).toLocaleDateString('ro-RO')
       : '';
     const orderTitle = `ORDER NUMBER : ${order.supplierOrderRegistrationNumber} / ${orderDate}`;
-    doc.fontSize(12).font('Helvetica-Bold').text(orderTitle, { align: 'center' });
+    doc
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text(orderTitle, { align: 'center' });
     doc.font('Helvetica');
 
     // --- Ship to / Invoice to ---
@@ -268,7 +349,10 @@ export class SupplierOrderService {
     doc.moveDown(1);
 
     // --- End User ---
-    doc.fontSize(9).fillColor(RED).text(`End user: ${order.endUser || ''}`);
+    doc
+      .fontSize(9)
+      .fillColor(RED)
+      .text(`End user: ${order.endUser || ''}`);
     doc.fillColor(BLACK);
     doc.moveDown(0.5);
 
@@ -299,9 +383,7 @@ export class SupplierOrderService {
           `${contact.firstName} ${contact.lastName} - ${contact.position}`,
           { continued: true },
         );
-      doc
-        .font('Helvetica')
-        .text(` (${contact.email}, Tel: ${contact.phone})`);
+      doc.font('Helvetica').text(` (${contact.email}, Tel: ${contact.phone})`);
     }
     doc.moveDown(0.5);
 
@@ -316,14 +398,15 @@ export class SupplierOrderService {
       unitPrice: 420,
       totalPrice: 500,
     };
+    const currency = order.supplier?.currency ?? 'EUR';
     const colHeaders = [
       { x: colX.item, label: 'ITEM' },
       { x: colX.desc, label: 'DESCRIPTION' },
       { x: colX.qty, label: 'QTY' },
       { x: colX.discount, label: 'DISCOUNT\n(%)' },
       { x: colX.remark, label: 'REMARK' },
-      { x: colX.unitPrice, label: 'UNIT NET PRICE\n(EUR)' },
-      { x: colX.totalPrice, label: 'TOTAL PRICE\n(EUR)' },
+      { x: colX.unitPrice, label: `UNIT NET PRICE\n(${currency})` },
+      { x: colX.totalPrice, label: `TOTAL PRICE\n(${currency})` },
     ];
 
     // Table header
@@ -372,7 +455,7 @@ export class SupplierOrderService {
     rowY += 5;
     doc
       .font('Helvetica-Bold')
-      .text('NET TOTAL PRICE (EUR)', colX.unitPrice - 80, rowY, {
+      .text(`NET TOTAL PRICE (${currency})`, colX.unitPrice - 80, rowY, {
         width: 150,
       });
     doc.text(netTotal.toFixed(2), colX.totalPrice, rowY, { width: 70 });
@@ -398,9 +481,7 @@ export class SupplierOrderService {
     doc.text(`REMARKS: ${order.remarks || ''}`);
     doc.moveDown(0.5);
     doc.fillColor(RED);
-    doc.text(
-      `TERMS, MEAN OF PAYMENT: ${order.termsAndMeanOfPayment}`,
-    );
+    doc.text(`TERMS, MEAN OF PAYMENT: ${order.termsAndMeanOfPayment}`);
     doc.fillColor(BLACK);
     doc.text(`POS - Point of Sales: ${order.pointOfSales || ''}`);
     doc.moveDown(0.5);
@@ -479,9 +560,7 @@ export class SupplierOrderService {
       throw new NotFoundException('Stock entry delivery not found');
     }
     if (delivery.isShipped()) {
-      throw new BadRequestException(
-        'This delivery has already been finalized',
-      );
+      throw new BadRequestException('This delivery has already been finalized');
     }
 
     if (dto.serialNumbers.length !== delivery.quantity) {
@@ -503,9 +582,21 @@ export class SupplierOrderService {
     const customerOfferId = supplierOrder.customerOfferId ?? undefined;
 
     return this.dataSource.transaction(async (manager) => {
-      await manager.update(StockEntryDelivery, { id: deliveryId }, {
-        shipmentDate: new Date(),
-      });
+      await manager.update(
+        StockEntryDelivery,
+        { id: deliveryId },
+        {
+          shipmentDate: new Date(dto.shipmentDate),
+          supplierInvoiceNumber: dto.supplierInvoiceNumber,
+          supplierInvoiceDate: new Date(dto.supplierInvoiceDate),
+          supplierCurrencyToRonExchangeRate:
+            dto.supplierCurrencyToRonExchangeRate,
+          ...(dto.dviNumber !== undefined && { dviNumber: dto.dviNumber }),
+          ...(dto.dviDate && { dviDate: new Date(dto.dviDate) }),
+          ...(dto.nirNumber !== undefined && { nirNumber: dto.nirNumber }),
+          ...(dto.nirDate && { nirDate: new Date(dto.nirDate) }),
+        },
+      );
 
       const stockEntries = dto.serialNumbers.map((serialNumber) =>
         manager.create(StockEntry, {
@@ -524,60 +615,151 @@ export class SupplierOrderService {
     });
   }
 
+  async updateStockEntryDelivery(
+    deliveryId: number,
+    dto: UpdateStockEntryDeliveryDto,
+  ) {
+    const delivery = await this.stockEntryDeliveryRepository.findOneBy({
+      id: deliveryId,
+    });
+    if (!delivery) {
+      throw new NotFoundException('Stock entry delivery not found');
+    }
+
+    if (delivery.isShipped() && dto.estimatedShipmentDate !== undefined) {
+      throw new BadRequestException(
+        'Cannot change estimated shipment date after delivery has been shipped',
+      );
+    }
+
+    const updateData: Partial<StockEntryDelivery> = {};
+    if (dto.estimatedShipmentDate !== undefined)
+      updateData.estimatedShipmentDate = new Date(dto.estimatedShipmentDate);
+    if (dto.awb !== undefined) updateData.awb = dto.awb;
+    if (dto.dviNumber !== undefined) updateData.dviNumber = dto.dviNumber;
+    if (dto.dviDate !== undefined)
+      updateData.dviDate = new Date(dto.dviDate);
+    if (dto.nirNumber !== undefined) updateData.nirNumber = dto.nirNumber;
+    if (dto.nirDate !== undefined)
+      updateData.nirDate = new Date(dto.nirDate);
+    if (dto.supplierInvoiceNumber !== undefined)
+      updateData.supplierInvoiceNumber = dto.supplierInvoiceNumber;
+    if (dto.supplierInvoiceDate !== undefined)
+      updateData.supplierInvoiceDate = new Date(dto.supplierInvoiceDate);
+    if (dto.supplierCurrencyToRonExchangeRate !== undefined)
+      updateData.supplierCurrencyToRonExchangeRate =
+        dto.supplierCurrencyToRonExchangeRate;
+
+    await this.stockEntryDeliveryRepository.update(
+      { id: deliveryId },
+      updateData,
+    );
+    return { message: 'Stock entry delivery updated successfully' };
+  }
+
+  async findStockEntriesBySupplierOrder(id: number, dto: FindDto) {
+    const order = await this.supplierOrderRepository.findOneBy({ id });
+    if (!order) {
+      throw new NotFoundException('Supplier order not found');
+    }
+
+    const rows = await this.supplierOrderRowRepository.find({
+      where: { supplierOrderId: id },
+      relations: { suppliersProductCatalog: { product: true } },
+      order: { id: 'ASC' },
+    });
+
+    const rowIds = rows.map((row) => row.id);
+    if (rowIds.length === 0) {
+      return { results: [], total: 0 };
+    }
+
+    const deliveries = await this.stockEntryDeliveryRepository.find({
+      where: { supplierOrderRowId: In(rowIds) },
+      relations: {
+        stockEntries: { customerOffer: true },
+        warrantyFile: true,
+        handoverFile: true,
+      },
+      order: { estimatedShipmentDate: 'ASC', id: 'ASC' },
+    });
+
+    const deliveriesByRowId = new Map<number, StockEntryDelivery[]>();
+    for (const delivery of deliveries) {
+      const existing = deliveriesByRowId.get(delivery.supplierOrderRowId) ?? [];
+      existing.push(delivery);
+      deliveriesByRowId.set(delivery.supplierOrderRowId, existing);
+    }
+
+    const results = rows.map((row) => {
+      const rowDeliveries = (deliveriesByRowId.get(row.id) ?? []).map(
+        (delivery) => ({
+          ...delivery,
+          quantity: Number(delivery.quantity),
+          isShipped: delivery.isShipped(),
+          stockEntries: delivery.stockEntries ?? [],
+        }),
+      );
+
+      return {
+        ...row,
+        orderedQuantity: Number(row.orderedQuantity),
+        supplierOrderDeliveries: rowDeliveries,
+      };
+    });
+
+    return { results, total: rows.length };
+  }
+
   async createWithReservation(dto: CreateSupplierOrderWithReservationDto) {
+    if (dto.rows.length > 0) {
+      const spcIds = dto.rows.map((r) => r.suppliersProductCatalogId);
+      if (new Set(spcIds).size !== spcIds.length) {
+        throw new BadRequestException(
+          'Produse duplicate in randurile comenzii furnizor.',
+        );
+      }
+    }
+
     return this.dataSource.transaction(async (manager) => {
       const { rows, ...orderFields } = dto;
 
-      const order = manager.create(SupplierOrder, {
-        ...orderFields,
-        status: SupplierOrderStatus.CREATED,
-      });
-      const savedOrder = await manager.save(SupplierOrder, order);
+      let savedOrder = null;
+      if (rows.length > 0) {
+        const order = manager.create(SupplierOrder, {
+          ...orderFields,
+          status: SupplierOrderStatus.CREATED,
+        });
+        savedOrder = await manager.save(SupplierOrder, order);
 
-      const orderRows = rows.map((row) =>
-        manager.create(SupplierOrderRow, {
-          supplierOrderId: savedOrder.id,
-          suppliersProductCatalogId: row.suppliersProductCatalogId,
-          unitPrice: row.unitPrice,
-          orderedQuantity: row.orderedQuantity,
-        }),
-      );
-      await manager.save(SupplierOrderRow, orderRows);
+        const orderRows = rows.map((row) =>
+          manager.create(SupplierOrderRow, {
+            supplierOrderId: savedOrder!.id,
+            suppliersProductCatalogId: row.suppliersProductCatalogId,
+            unitPrice: row.unitPrice,
+            orderedQuantity: row.orderedQuantity,
+          }),
+        );
+        await manager.save(SupplierOrderRow, orderRows);
+      }
 
-      // Auto-reserve matching free stock entries for each product catalog
-      for (const row of orderRows) {
-        const freeStockEntries = await manager
-          .createQueryBuilder(StockEntry, 'se')
-          .innerJoin(
-            StockEntryDelivery,
-            'sed',
-            'sed.id = se.stock_entry_delivery_id',
-          )
-          .innerJoin(
-            SupplierOrderRow,
-            'sor',
-            'sor.id = sed.supplier_order_row_id',
-          )
-          .where('sor.suppliers_product_catalog_id = :spcId', {
-            spcId: row.suppliersProductCatalogId,
-          })
-          .andWhere('se.origin = :origin', {
-            origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,
-          })
-          .andWhere('se.customer_offer_id IS NULL')
-          .getMany();
-
-        if (freeStockEntries.length > 0) {
-          const serialNumbers = freeStockEntries.map((se) => se.serialNumber);
+      // Reserve specific serial numbers chosen by the user
+      if (dto.reservations?.length) {
+        for (const reservation of dto.reservations) {
+          if (reservation.serialNumbers.length === 0) continue;
           await manager.update(
             StockEntry,
-            { serialNumber: In(serialNumbers) },
+            {
+              serialNumber: In(reservation.serialNumbers),
+              origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,
+              customerOfferId: IsNull(),
+            },
             { customerOfferId: dto.customerOfferId },
           );
         }
       }
 
-      return savedOrder;
+      return savedOrder ?? { message: 'Reservations processed successfully' };
     });
   }
 }

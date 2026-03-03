@@ -45,7 +45,7 @@ export class MailService {
 
   confirmEmailToken(token: string): ConfirmEmailTokenResponse {
     try {
-      const data = this.jwtService.verify(token) as EmailTokenPayload;
+      const data = this.jwtService.verify(token);
       return { isValid: true, email: data.email };
     } catch {
       this.logger.debug('Email token verification failed.');

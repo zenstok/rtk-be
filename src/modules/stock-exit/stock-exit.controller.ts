@@ -27,9 +27,9 @@ export class StockExitController {
     return this.stockExitService.findAll();
   }
 
-  @Get('by-customer-offer-id/:customer-offer-id')
+  @Get('by-customer-offer-id/:customerOfferId')
   findAllByCustomerOfferId(
-    @Param('customer-offer-id') customerOfferId: number,
+    @Param('customerOfferId') customerOfferId: number,
     @Query() dto: FindDto,
   ) {
     return this.stockExitService.findAllByCustomerOfferId(customerOfferId, dto);

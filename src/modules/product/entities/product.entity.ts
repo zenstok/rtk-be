@@ -8,34 +8,27 @@ export class Product {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ default: '' })
   description: string;
 
   @Column()
-  category: string; // can be a separate table in the future
+  category: string;
 
   @Column()
-  manufacturer: string; // can be a separate table in the future
+  manufacturer: string;
 
   @Column({ name: 'manufacturer_code' })
   manufacturerCode: string;
 
-  @Column({ name: 'hs_code' })
+  @Column({ name: 'hs_code', default: '' })
   hsCode: string;
 
-  @Column({ name: 'taric_code' })
+  @Column({ name: 'taric_code', default: '' })
   taricCode: string;
 
   @Column({ name: 'unit_of_measurement' })
-  unitOfMeasurement: string; // can be a separate table in the future (bucati/set/kit/sistem/m/mp)
+  unitOfMeasurement: string;
 
-  @Column()
   stock: number;
-
-  @Column({ name: 'reserved_stock' })
   reservedStock: number;
-
-  get freeStock() {
-    return this.stock - this.reservedStock;
-  }
 }

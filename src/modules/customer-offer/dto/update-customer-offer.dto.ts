@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsInt,
-  IsOptional,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsDateString, IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class UpdateCustomerOfferDto {
   @ApiProperty({ required: false })

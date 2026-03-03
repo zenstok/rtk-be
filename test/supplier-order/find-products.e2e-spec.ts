@@ -65,11 +65,14 @@ describe('SupplierOrderService.findProducts (integration)', () => {
       (r) => r.suppliersProductCatalogId === seed.spc1.id,
     )!;
     expect(row1).toBeDefined();
-    expect(row1.productName).toBe('Widget A');
-    expect(row1.manufacturerCode).toBe('WA-001');
+    expect(row1.suppliersProductCatalog?.product?.name).toBe('Widget A');
+    expect(row1.suppliersProductCatalog?.product?.manufacturerCode).toBe(
+      'WA-001',
+    );
     expect(row1.orderedQuantity).toBe(10);
     expect(row1.deliveredQuantity).toBe(0);
     expect(row1.undeliveredQuantity).toBe(10);
+    expect(row1.supplierOrderDeliveries).toHaveLength(0);
   });
 
   it('should compute deliveredQuantity from shipped deliveries', async () => {
@@ -89,6 +92,8 @@ describe('SupplierOrderService.findProducts (integration)', () => {
     expect(row1.orderedQuantity).toBe(10);
     expect(row1.deliveredQuantity).toBe(3);
     expect(row1.undeliveredQuantity).toBe(7);
+    expect(row1.supplierOrderDeliveries).toHaveLength(1);
+    expect(row1.supplierOrderDeliveries[0].isShipped).toBe(true);
   });
 
   it('should sum multiple shipped deliveries', async () => {
@@ -111,6 +116,7 @@ describe('SupplierOrderService.findProducts (integration)', () => {
     )!;
     expect(row1.deliveredQuantity).toBe(7);
     expect(row1.undeliveredQuantity).toBe(3);
+    expect(row1.supplierOrderDeliveries).toHaveLength(2);
   });
 
   it('should not count unshipped deliveries in deliveredQuantity', async () => {
@@ -133,6 +139,9 @@ describe('SupplierOrderService.findProducts (integration)', () => {
     )!;
     expect(row1.deliveredQuantity).toBe(2);
     expect(row1.undeliveredQuantity).toBe(8);
+    expect(row1.supplierOrderDeliveries).toHaveLength(2);
+    expect(row1.supplierOrderDeliveries.some((d) => d.isShipped)).toBe(true);
+    expect(row1.supplierOrderDeliveries.some((d) => !d.isShipped)).toBe(true);
   });
 
   it('should return numeric types, not strings', async () => {

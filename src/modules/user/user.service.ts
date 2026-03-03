@@ -6,7 +6,8 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './repositories/user.repository';
-import { FindDto } from '../../utils/dtos/find.dto';
+import { ILike } from 'typeorm';
+import { FindUserDto } from './dto/find-user.dto';
 import { BCRYPT_SALT_ROUNDS } from '../auth/auth.service';
 import * as bcrypt from 'bcrypt';
 
@@ -27,8 +28,26 @@ export class UserService {
     });
   }
 
-  async findAll(dto: FindDto) {
+  async findAll(dto: FindUserDto) {
+    const where: Record<string, unknown>[] = [];
+
+    const base: Record<string, unknown> = {};
+    if (dto.role) {
+      base.role = dto.role;
+    }
+
+    if (dto.search) {
+      where.push(
+        { ...base, firstName: ILike(`%${dto.search}%`) },
+        { ...base, lastName: ILike(`%${dto.search}%`) },
+        { ...base, email: ILike(`%${dto.search}%`) },
+      );
+    } else if (Object.keys(base).length > 0) {
+      where.push(base);
+    }
+
     const [results, total] = await this.userRepository.findAndCount({
+      where: where.length > 0 ? where : undefined,
       order: { createdAt: 'DESC' },
       skip: dto.offset,
       take: dto.limit > 0 ? dto.limit : undefined,

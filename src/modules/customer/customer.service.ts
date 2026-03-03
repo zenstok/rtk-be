@@ -6,6 +6,8 @@ import { UpdateCustomerContactPersonDto } from './dto/update-customer-contact-pe
 import { CustomerRepository } from './repositories/customer.repository';
 import { CustomerContactPersonRepository } from './repositories/customer-contact-person.repository';
 import { FindDto } from '../../utils/dtos/find.dto';
+import { FindCustomerDto } from './dto/find-customer.dto';
+import { ILike } from 'typeorm';
 
 @Injectable()
 export class CustomerService {
@@ -18,8 +20,16 @@ export class CustomerService {
     return this.customerRepository.save(dto);
   }
 
-  async findAll(dto: FindDto) {
+  async findAll(dto: FindCustomerDto) {
+    const where = dto.search
+      ? [
+          { name: ILike(`%${dto.search}%`) },
+          { uniqueRegistrationCode: ILike(`%${dto.search}%`) },
+        ]
+      : undefined;
+
     const [results, total] = await this.customerRepository.findAndCount({
+      where,
       order: { name: 'ASC' },
       skip: dto.offset,
       take: dto.limit > 0 ? dto.limit : undefined,
@@ -51,7 +61,10 @@ export class CustomerService {
     return { message: 'Customer deleted successfully' };
   }
 
-  async createContactPerson(customerId: number, dto: CreateCustomerContactPersonDto) {
+  async createContactPerson(
+    customerId: number,
+    dto: CreateCustomerContactPersonDto,
+  ) {
     if (!(await this.customerRepository.existsBy({ id: customerId }))) {
       throw new NotFoundException('Customer not found');
     }

@@ -13,6 +13,19 @@ import {
 import { Type } from 'class-transformer';
 import { CreateSupplierOrderRowDto } from './create-supplier-order-row.dto';
 
+export class SerialNumberReservationDto {
+  @ApiProperty()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  suppliersProductCatalogId: number;
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  serialNumbers: string[];
+}
+
 export class CreateSupplierOrderWithReservationDto {
   @ApiProperty()
   @IsInt()
@@ -103,8 +116,14 @@ export class CreateSupplierOrderWithReservationDto {
 
   @ApiProperty({ type: [CreateSupplierOrderRowDto] })
   @IsArray()
-  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => CreateSupplierOrderRowDto)
   rows: CreateSupplierOrderRowDto[];
+
+  @ApiProperty({ type: [SerialNumberReservationDto], required: false })
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => SerialNumberReservationDto)
+  reservations?: SerialNumberReservationDto[];
 }

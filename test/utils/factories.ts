@@ -7,9 +7,7 @@ import { Supplier } from '../../src/modules/supplier/entities/supplier.entity';
 import { SupplierContactPerson } from '../../src/modules/supplier/entities/supplier-contact-person.entity';
 import { SuppliersProductCatalog } from '../../src/modules/suppliers-product-catalog/entities/suppliers-product-catalog.entity';
 import { ProductProcurementRequest } from '../../src/modules/product-procurement-request/entities/product-procurement-request.entity';
-import {
-  PriceAnalysis,
-} from '../../src/modules/price-analysis/entities/price-analysis.entity';
+import { PriceAnalysis } from '../../src/modules/price-analysis/entities/price-analysis.entity';
 import { PriceAnalysisSupplierGroup } from '../../src/modules/price-analysis/entities/price-analysis-supplier-group.entity';
 import { PriceAnalysisRow } from '../../src/modules/price-analysis/entities/price-analysis-row.entity';
 import {
@@ -119,9 +117,7 @@ export class TestFactories {
     const n = unique();
 
     // Temporarily disable FK triggers on suppliers to break the circular dependency
-    await this.dataSource.query(
-      'ALTER TABLE "suppliers" DISABLE TRIGGER ALL',
-    );
+    await this.dataSource.query('ALTER TABLE "suppliers" DISABLE TRIGGER ALL');
 
     const supplierRepo = this.dataSource.getRepository(Supplier);
     const supplier = await supplierRepo.save(
@@ -138,9 +134,7 @@ export class TestFactories {
       }),
     );
 
-    await this.dataSource.query(
-      'ALTER TABLE "suppliers" ENABLE TRIGGER ALL',
-    );
+    await this.dataSource.query('ALTER TABLE "suppliers" ENABLE TRIGGER ALL');
 
     const contactRepo = this.dataSource.getRepository(SupplierContactPerson);
     const contactPerson = await contactRepo.save(

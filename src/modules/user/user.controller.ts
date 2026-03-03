@@ -12,7 +12,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FindDto } from '../../utils/dtos/find.dto';
+import { FindUserDto } from './dto/find-user.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/constants/role.enum';
 
@@ -29,7 +29,7 @@ export class UserController {
   }
 
   @Get()
-  findAll(@Query() dto: FindDto) {
+  findAll(@Query() dto: FindUserDto) {
     return this.userService.findAll(dto);
   }
 

@@ -43,7 +43,11 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
     customerOfferId: number,
     supplierId: number,
     userId: number,
-    rows: { suppliersProductCatalogId: number; unitPrice: number; orderedQuantity: number }[],
+    rows: {
+      suppliersProductCatalogId: number;
+      unitPrice: number;
+      orderedQuantity: number;
+    }[],
   ) {
     return {
       customerOfferId,
@@ -107,18 +111,13 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
     ]);
 
     const result = await service.createWithReservation(
-      baseDto(
-        seed.customerOffer.id,
-        seed.supplier.id,
-        seed.user.id,
-        [
-          {
-            suppliersProductCatalogId: seed.spc1.id,
-            unitPrice: 100,
-            orderedQuantity: 5,
-          },
-        ],
-      ),
+      baseDto(seed.customerOffer.id, seed.supplier.id, seed.user.id, [
+        {
+          suppliersProductCatalogId: seed.spc1.id,
+          unitPrice: 100,
+          orderedQuantity: 5,
+        },
+      ]),
     );
 
     expect(result.id).toBeDefined();
@@ -138,9 +137,7 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
       where: { customerOfferId: seed.customerOffer.id },
     });
     expect(reservedEntries).toHaveLength(3);
-    const reservedSerials = reservedEntries
-      .map((e) => e.serialNumber)
-      .sort();
+    const reservedSerials = reservedEntries.map((e) => e.serialNumber).sort();
     expect(reservedSerials).toEqual(['FREE-A', 'FREE-B', 'FREE-C']);
   });
 
@@ -187,18 +184,13 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
     const newOffer = await factories.createCustomerOffer(pa.id, customer2.id);
 
     await service.createWithReservation(
-      baseDto(
-        newOffer.id,
-        seed.supplier.id,
-        seed.user.id,
-        [
-          {
-            suppliersProductCatalogId: seed.spc1.id,
-            unitPrice: 100,
-            orderedQuantity: 5,
-          },
-        ],
-      ),
+      baseDto(newOffer.id, seed.supplier.id, seed.user.id, [
+        {
+          suppliersProductCatalogId: seed.spc1.id,
+          unitPrice: 100,
+          orderedQuantity: 5,
+        },
+      ]),
     );
 
     // Only the free entry should be reserved to the new offer
@@ -221,18 +213,13 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
 
     // No free stock entries exist at all
     const result = await service.createWithReservation(
-      baseDto(
-        seed.customerOffer.id,
-        seed.supplier.id,
-        seed.user.id,
-        [
-          {
-            suppliersProductCatalogId: seed.spc1.id,
-            unitPrice: 100,
-            orderedQuantity: 5,
-          },
-        ],
-      ),
+      baseDto(seed.customerOffer.id, seed.supplier.id, seed.user.id, [
+        {
+          suppliersProductCatalogId: seed.spc1.id,
+          unitPrice: 100,
+          orderedQuantity: 5,
+        },
+      ]),
     );
 
     expect(result.id).toBeDefined();
@@ -249,27 +236,25 @@ describe('SupplierOrderService.createWithReservation (integration)', () => {
   it('should reserve entries for multiple product catalogs', async () => {
     const seed = await factories.seedSupplierOrderBase();
 
-    await createFreeStockEntries(seed, seed.spc1.id, ['P1-FREE-A', 'P1-FREE-B']);
+    await createFreeStockEntries(seed, seed.spc1.id, [
+      'P1-FREE-A',
+      'P1-FREE-B',
+    ]);
     await createFreeStockEntries(seed, seed.spc2.id, ['P2-FREE-A']);
 
     await service.createWithReservation(
-      baseDto(
-        seed.customerOffer.id,
-        seed.supplier.id,
-        seed.user.id,
-        [
-          {
-            suppliersProductCatalogId: seed.spc1.id,
-            unitPrice: 100,
-            orderedQuantity: 5,
-          },
-          {
-            suppliersProductCatalogId: seed.spc2.id,
-            unitPrice: 200,
-            orderedQuantity: 3,
-          },
-        ],
-      ),
+      baseDto(seed.customerOffer.id, seed.supplier.id, seed.user.id, [
+        {
+          suppliersProductCatalogId: seed.spc1.id,
+          unitPrice: 100,
+          orderedQuantity: 5,
+        },
+        {
+          suppliersProductCatalogId: seed.spc2.id,
+          unitPrice: 200,
+          orderedQuantity: 3,
+        },
+      ]),
     );
 
     const seRepo = dataSource.getRepository(StockEntry);

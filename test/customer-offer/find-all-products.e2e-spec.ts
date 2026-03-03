@@ -50,9 +50,7 @@ describe('CustomerOfferService.findAllProducts (integration)', () => {
     expect(result.total).toBe(2);
     expect(result.results).toHaveLength(2);
 
-    const row1Result = result.results.find(
-      (r: any) => r.id === seed.row1.id,
-    )!;
+    const row1Result = result.results.find((r: any) => r.id === seed.row1.id)!;
     expect(row1Result).toBeDefined();
     expect(row1Result.suppliersProductCatalogId).toBe(seed.spc1.id);
     expect(row1Result.unitPrice).toBe(100);
@@ -70,9 +68,7 @@ describe('CustomerOfferService.findAllProducts (integration)', () => {
     expect(row1Result.reservedQuantity).toBe(0);
     expect(row1Result.freeQuantity).toBe(20);
 
-    const row2Result = result.results.find(
-      (r: any) => r.id === seed.row2.id,
-    )!;
+    const row2Result = result.results.find((r: any) => r.id === seed.row2.id)!;
     expect(row2Result.totalQuantity).toBe(15);
     expect(row2Result.supplierOrderQuantity).toBe(0);
     expect(row2Result.reservedQuantity).toBe(0);
@@ -480,9 +476,7 @@ describe('CustomerOfferService.findAllProducts (integration)', () => {
       soOther.id,
       seed.spc1.id,
     );
-    const deliveryOther = await factories.createStockEntryDelivery(
-      sorOther.id,
-    );
+    const deliveryOther = await factories.createStockEntryDelivery(sorOther.id);
     for (let i = 0; i < 10; i++) {
       await factories.createStockEntry(`SN-OTHER-${i}`, deliveryOther.id, {
         origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,

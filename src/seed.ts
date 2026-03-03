@@ -498,9 +498,9 @@ async function seed() {
       customerContactPersonId: ionM.id,
       ccCustomerContactPersonId: elenaV.id,
     }),
-    // PPR 2: OFFER_CREATED
+    // PPR 2: has price analysis + Dacia offer (status computed from offer)
     pprRepo.create({
-      status: 'OFFER_CREATED' as any,
+      status: 'IN_PROGRESS' as any,
       category: 'Circuite integrate',
       generationMethod: 'telefon',
       receivingMethod: 'generata intern',
@@ -513,9 +513,9 @@ async function seed() {
       customerContactPersonId: mihaiC.id,
       ccCustomerContactPersonId: anaP.id,
     }),
-    // PPR 3: OFFER_ACCEPTED (full lifecycle)
+    // PPR 3: full lifecycle — Siemens offer confirmed (status computed from offer)
     pprRepo.create({
-      status: 'OFFER_ACCEPTED' as any,
+      status: 'IN_PROGRESS' as any,
       category: 'Conectori',
       generationMethod: 'email',
       receivingMethod: 'initiata de client',
@@ -691,21 +691,26 @@ async function seed() {
 
   const soRepo = ds.getRepository(SupplierOrder);
   const supplierOrders = await soRepo.save([
-    // Order 1: CREATED (for Dacia, no customer offer link — simple order)
+    // Order 1: DELIVERED (manual order — free stock, not linked to any offer)
     soRepo.create({
-      status: SupplierOrderStatus.CREATED,
+      status: SupplierOrderStatus.DELIVERED,
       supplierOrderRegistrationNumber: 'SORN-2026-001',
       orderAcknowledgmentNumber: 'OAN-MUR-001',
-      orderAcknowledgmentDate: new Date('2026-02-10'),
-      endUser: 'Dacia Automobile SRL',
+      orderAcknowledgmentDate: new Date('2026-01-10'),
+      customerCommittedDeliveryDate: new Date('2026-02-15'),
+      estimatedDeliveryDate: new Date('2026-02-12'),
+      endUser: 'RomTek Electronics SRL',
       partialShipment: false,
       incoterm2010: 'DAP',
       meanOfShipment: 'Air freight',
-      requestedDeliveryDate: '2026-04-01',
-      remarks: 'Urgent - production line waiting',
+      requestedDeliveryDate: '2026-02-15',
+      remarks: 'Stoc general componente pasive',
       termsAndMeanOfPayment: 'Net 60 - bank transfer',
       pointOfSales: 'Bucuresti',
       otherInstructions: 'Include test reports',
+      orderReference: 'REF-MUR-2026-001',
+      manualCreationReason: 'Aprovizionare stoc general componente pasive',
+      transportationCost: 180,
       supplierId: murata.id,
       userInChargeId: maria.id,
       assignedUserId: andrei.id,
@@ -757,7 +762,7 @@ async function seed() {
 
   const sorRepo = ds.getRepository(SupplierOrderRow);
   const orderRows = await sorRepo.save([
-    // Order 1 rows (Murata, simple)
+    // Order 1 rows (Murata, manual — free stock)
     sorRepo.create({
       supplierOrderId: soCreated.id,
       suppliersProductCatalogId: murCap.id,
@@ -769,6 +774,12 @@ async function seed() {
       suppliersProductCatalogId: murRes.id,
       unitPrice: 0.018,
       orderedQuantity: 10000,
+    }),
+    sorRepo.create({
+      supplierOrderId: soCreated.id,
+      suppliersProductCatalogId: murFfc.id,
+      unitPrice: 0.78,
+      orderedQuantity: 500,
     }),
     // Order 2 rows (Molex, for Siemens offer)
     sorRepo.create({
@@ -793,11 +804,11 @@ async function seed() {
     sorRepo.create({
       supplierOrderId: soDelivered.id,
       suppliersProductCatalogId: murFfc.id,
-      unitPrice: 0.80,
+      unitPrice: 0.8,
       orderedQuantity: 300,
     }),
   ]);
-  const [sor1Cap, sor1Res, sor2Usbc, sor2Ffc, sor3Cap, sor3Ffc] = orderRows;
+  const [sor1Cap, sor1Res, sor1Ffc, sor2Usbc, sor2Ffc, sor3Cap, sor3Ffc] = orderRows;
 
   // ──────────────────────────────────────────────
   // Phase 6: Deliveries & Stock entries
@@ -806,7 +817,50 @@ async function seed() {
 
   const sedRepo = ds.getRepository(StockEntryDelivery);
   const deliveries = await sedRepo.save([
-    // Delivered order (order 3) — full deliveries
+    // Manual order (order 1) — full deliveries (free stock)
+    sedRepo.create({
+      supplierOrderRowId: sor1Cap.id,
+      quantity: 5000,
+      estimatedShipmentDate: new Date('2026-02-08'),
+      shipmentDate: new Date('2026-02-10'),
+      awb: 'AWB-MUR-2026-S01',
+      dviNumber: 'DVI-2026-0010',
+      dviDate: new Date('2026-02-12'),
+      nirNumber: 'NIR-2026-0010',
+      nirDate: new Date('2026-02-12'),
+      supplierInvoiceNumber: 'INV-MUR-2026-0050',
+      supplierInvoiceDate: new Date('2026-02-10'),
+      supplierCurrencyToRonExchangeRate: 4.9745,
+    }),
+    sedRepo.create({
+      supplierOrderRowId: sor1Res.id,
+      quantity: 10000,
+      estimatedShipmentDate: new Date('2026-02-08'),
+      shipmentDate: new Date('2026-02-10'),
+      awb: 'AWB-MUR-2026-S02',
+      dviNumber: 'DVI-2026-0011',
+      dviDate: new Date('2026-02-12'),
+      nirNumber: 'NIR-2026-0011',
+      nirDate: new Date('2026-02-12'),
+      supplierInvoiceNumber: 'INV-MUR-2026-0051',
+      supplierInvoiceDate: new Date('2026-02-10'),
+      supplierCurrencyToRonExchangeRate: 4.9745,
+    }),
+    sedRepo.create({
+      supplierOrderRowId: sor1Ffc.id,
+      quantity: 500,
+      estimatedShipmentDate: new Date('2026-02-08'),
+      shipmentDate: new Date('2026-02-10'),
+      awb: 'AWB-MUR-2026-S03',
+      dviNumber: 'DVI-2026-0012',
+      dviDate: new Date('2026-02-12'),
+      nirNumber: 'NIR-2026-0012',
+      nirDate: new Date('2026-02-12'),
+      supplierInvoiceNumber: 'INV-MUR-2026-0052',
+      supplierInvoiceDate: new Date('2026-02-10'),
+      supplierCurrencyToRonExchangeRate: 4.9745,
+    }),
+    // Reserved order (order 3) — full deliveries (Siemens offer)
     sedRepo.create({
       supplierOrderRowId: sor3Cap.id,
       quantity: 2000,
@@ -847,11 +901,11 @@ async function seed() {
       estimatedShipmentDate: new Date('2026-03-15'),
     }),
   ]);
-  const [delCap, delFfc, delUsbc, delFfcPending] = deliveries;
+  const [delCapSimple, delResSimple, delFfcSimple, delCap, delFfc, delUsbc, delFfcPending] = deliveries;
 
   const seRepo = ds.getRepository(StockEntry);
   const stockEntries = await seRepo.save([
-    // From delivered order (reserved — customerOfferId from supplier order)
+    // From reserved order (order 3, Siemens offer — all FROM_RESERVED_SUPPLIER_ORDER)
     seRepo.create({
       serialNumber: 'SN-CAP-MUR-001',
       stockEntryDeliveryId: delCap.id,
@@ -882,32 +936,44 @@ async function seed() {
       origin: StockEntryOrigin.FROM_RESERVED_SUPPLIER_ORDER,
       customerOfferId: offerSiemens.id,
     }),
-    // Some free stock (simple supplier order, no customer offer)
+    // Free stock from manual order (order 1, no customer offer)
     seRepo.create({
       serialNumber: 'SN-CAP-FREE-001',
-      stockEntryDeliveryId: delCap.id,
+      stockEntryDeliveryId: delCapSimple.id,
+      origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,
+    }),
+    seRepo.create({
+      serialNumber: 'SN-RES-FREE-001',
+      stockEntryDeliveryId: delResSimple.id,
       origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,
     }),
     seRepo.create({
       serialNumber: 'SN-FFC-FREE-001',
-      stockEntryDeliveryId: delFfc.id,
+      stockEntryDeliveryId: delFfcSimple.id,
       origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,
     }),
     seRepo.create({
       serialNumber: 'SN-FFC-FREE-002',
-      stockEntryDeliveryId: delFfc.id,
+      stockEntryDeliveryId: delFfcSimple.id,
       origin: StockEntryOrigin.FROM_SIMPLE_SUPPLIER_ORDER,
     }),
   ]);
 
   // Update product stock counts
+  // condensator: 4 entries (3 reserved + 1 free) - 1 exit (SN-CAP-MUR-001) = 3 in stock, 2 reserved
   await productRepo.update(condensator.id, {
     stock: 3,
-    reservedStock: 3,
-  });
-  await productRepo.update(cableFfc.id, {
-    stock: 5,
     reservedStock: 2,
+  });
+  // cableFfc: 4 entries (2 reserved + 2 free) - 1 exit (SN-FFC-FREE-001) = 3 in stock, 2 reserved
+  await productRepo.update(cableFfc.id, {
+    stock: 3,
+    reservedStock: 2,
+  });
+  // rezistor: 1 entry (free) = 1 in stock, 0 reserved
+  await productRepo.update(rezistor.id, {
+    stock: 1,
+    reservedStock: 0,
   });
 
   // ──────────────────────────────────────────────

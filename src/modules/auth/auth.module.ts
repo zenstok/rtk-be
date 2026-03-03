@@ -24,7 +24,7 @@ import { MailModule } from '../mail/mail.module';
           'JWT_SECRET',
           'rtk-dev-jwt-secret-do-not-use-in-production',
         ),
-        signOptions: { expiresIn: '30m' },
+        signOptions: { expiresIn: '7d' },
       }),
     }),
     MailModule,

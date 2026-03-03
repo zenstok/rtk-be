@@ -17,6 +17,7 @@ import * as path from 'path';
 import { User } from '../user/entities/user.entity';
 import { UPLOAD_DIR } from './file.constants';
 import { FileService } from './file.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
 
@@ -39,38 +40,38 @@ const storage = diskStorage({
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  // @Post('upload')
-  // @UseInterceptors(
-  //   FileInterceptor('file', { storage, limits: { fileSize: MAX_FILE_SIZE } }),
-  // )
-  // @ApiConsumes('multipart/form-data')
-  // @ApiBody({
-  //   schema: {
-  //     type: 'object',
-  //     properties: {
-  //       file: {
-  //         type: 'string',
-  //         format: 'binary',
-  //       },
-  //     },
-  //   },
-  // })
-  // upload(
-  //   @UploadedFile(new ParseFilePipe())
-  //   file: Express.Multer.File,
-  //   @User() user: UserEntity,
-  // ) {
-  //   return this.fileService.create(
-  //     {
-  //       name: file.filename,
-  //       path: file.path,
-  //       extension: path.extname(file.originalname),
-  //       size: file.size,
-  //       mimetype: file.mimetype,
-  //     },
-  //     user,
-  //   );
-  // }
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', { storage, limits: { fileSize: MAX_FILE_SIZE } }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  upload(
+    @UploadedFile(new ParseFilePipe())
+    file: Express.Multer.File,
+    @CurrentUser() user: User,
+  ) {
+    return this.fileService.create(
+      {
+        name: file.filename,
+        path: file.path,
+        extension: path.extname(file.originalname),
+        size: file.size,
+        mimetype: file.mimetype,
+      },
+      user,
+    );
+  }
 
   @Get('download/:id')
   download(@Param('id') id: string): Promise<StreamableFile> {

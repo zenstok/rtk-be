@@ -14,6 +14,7 @@ import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { CreateSupplierContactPersonDto } from './dto/create-supplier-contact-person.dto';
 import { UpdateSupplierContactPersonDto } from './dto/update-supplier-contact-person.dto';
 import { FindDto } from '../../utils/dtos/find.dto';
+import { FindSupplierDto } from './dto/find-supplier.dto';
 
 @Controller('supplier')
 export class SupplierController {
@@ -25,7 +26,7 @@ export class SupplierController {
   }
 
   @Get()
-  findAll(@Query() dto: FindDto) {
+  findAll(@Query() dto: FindSupplierDto) {
     return this.supplierService.findAll(dto);
   }
 

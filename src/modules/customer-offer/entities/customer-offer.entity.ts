@@ -33,7 +33,11 @@ export class CustomerOffer {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column({ type: 'enum', enum: CustomerOfferStatus })
+  @Column({
+    type: 'enum',
+    enum: CustomerOfferStatus,
+    default: CustomerOfferStatus.IN_PROGRESS,
+  })
   status: CustomerOfferStatus;
 
   @Column({ name: 'confirmed_customer_order_receiving_method', nullable: true })

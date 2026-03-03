@@ -10,5 +10,6 @@ import { FileCleanupService } from './file-cleanup.service';
   imports: [TypeOrmModule.forFeature([File])],
   controllers: [FileController],
   providers: [FileService, FileCleanupService, FileRepository],
+  exports: [FileService],
 })
 export class FileModule {}

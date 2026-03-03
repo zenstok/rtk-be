@@ -84,10 +84,7 @@ export class PriceAnalysisController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdatePriceAnalysisDto,
-  ) {
+  update(@Param('id') id: number, @Body() dto: UpdatePriceAnalysisDto) {
     return this.priceAnalysisService.update(id, dto);
   }
 

@@ -18,7 +18,7 @@ import { AuthRefreshToken } from '../../src/modules/auth/entities/auth-refresh-t
 import { MailService } from '../../src/modules/mail/mail.service';
 import { MailProcessor } from '../../src/modules/mail/processors/mail.processor';
 import { ConfigModule } from '@nestjs/config';
-import { MAIL_QUEUE, RESET_PASSWORD_CONFIRMATION_JOB } from '../../src/modules/mail/mail.constants';
+import { MAIL_QUEUE } from '../../src/modules/mail/mail.constants';
 import { Role } from '../../src/modules/auth/constants/role.enum';
 
 const JWT_EMAIL_SECRET_DEV =
@@ -111,13 +111,15 @@ describe('Mail + BullMQ Queue (integration with Redis)', () => {
 
     // Mock the mailer's sendMail to capture emails instead of sending
     const mailerService = module.get(MailerService);
-    jest.spyOn(mailerService, 'sendMail').mockImplementation(async (opts: any) => {
-      sentEmails.push({
-        to: opts.to ?? '',
-        subject: opts.subject ?? '',
-        html: opts.html ?? '',
+    jest
+      .spyOn(mailerService, 'sendMail')
+      .mockImplementation(async (opts: any) => {
+        sentEmails.push({
+          to: opts.to ?? '',
+          subject: opts.subject ?? '',
+          html: opts.html ?? '',
+        });
       });
-    });
   }, 90_000);
 
   afterAll(async () => {
@@ -312,8 +314,18 @@ describe('Mail + BullMQ Queue (integration with Redis)', () => {
       await mailService.sendResetPasswordConfirmationQueued(user);
 
       // Job should be in delayed state (1s delay)
-      const counts = await mailQueue.getJobCounts('delayed', 'waiting', 'active', 'completed');
-      expect((counts.delayed ?? 0) + (counts.waiting ?? 0) + (counts.active ?? 0) + (counts.completed ?? 0)).toBeGreaterThanOrEqual(1);
+      const counts = await mailQueue.getJobCounts(
+        'delayed',
+        'waiting',
+        'active',
+        'completed',
+      );
+      expect(
+        (counts.delayed ?? 0) +
+          (counts.waiting ?? 0) +
+          (counts.active ?? 0) +
+          (counts.completed ?? 0),
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 });

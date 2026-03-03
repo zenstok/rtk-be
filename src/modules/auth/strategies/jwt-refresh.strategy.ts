@@ -23,9 +23,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(
-    payload: { sub: number; exp: number },
-  ): Promise<{ attributes: any; refreshTokenExpiresAt: Date }> {
+  async validate(payload: {
+    sub: number;
+    exp: number;
+  }): Promise<{ attributes: any; refreshTokenExpiresAt: Date }> {
     const user = await this.userRepository.findOneBy({ id: payload.sub });
     if (!user) {
       throw new UnauthorizedException();

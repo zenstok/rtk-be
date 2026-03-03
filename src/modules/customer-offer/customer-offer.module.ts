@@ -7,11 +7,14 @@ import { CustomerOffer } from './entities/customer-offer.entity';
 import { StockEntry } from '../stock-entry/entities/stock-entry.entity';
 import { StockExit } from '../stock-exit/entities/stock-exit.entity';
 import { PriceAnalysisModule } from '../price-analysis/price-analysis.module';
+import { FileModule } from '../file/file.module';
+import { PriceAnalysis } from '../price-analysis/entities/price-analysis.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CustomerOffer, StockEntry, StockExit]),
+    TypeOrmModule.forFeature([CustomerOffer, PriceAnalysis, StockEntry, StockExit]),
     PriceAnalysisModule,
+    FileModule,
   ],
   controllers: [CustomerOfferController],
   providers: [CustomerOfferService, CustomerOfferRepository],

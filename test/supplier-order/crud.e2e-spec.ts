@@ -45,6 +45,20 @@ describe('SupplierOrderService CRUD (integration)', () => {
     return { ...seed, so };
   }
 
+  describe('findAll', () => {
+    it('should return list rows with supplier and responsible users', async () => {
+      const { so, supplier, user } = await createOrderWithSeed();
+
+      const result = await service.findAll({ limit: 10, offset: 0 });
+
+      expect(result.total).toBe(1);
+      expect(result.results[0].id).toBe(so.id);
+      expect(result.results[0].supplier?.id).toBe(supplier.id);
+      expect(result.results[0].userInCharge?.id).toBe(user.id);
+      expect(result.results[0].assignedUser?.id).toBe(user.id);
+    });
+  });
+
   describe('findOne', () => {
     it('should return supplier order with relations', async () => {
       const { so } = await createOrderWithSeed();
@@ -83,9 +97,9 @@ describe('SupplierOrderService CRUD (integration)', () => {
     });
 
     it('should throw NotFoundException for non-existent order', async () => {
-      await expect(
-        service.update(99999, { remarks: 'test' }),
-      ).rejects.toThrow('Supplier order not found');
+      await expect(service.update(99999, { remarks: 'test' })).rejects.toThrow(
+        'Supplier order not found',
+      );
     });
 
     it('should reject update on canceled order', async () => {

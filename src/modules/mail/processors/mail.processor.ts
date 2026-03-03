@@ -16,9 +16,7 @@ export class MailProcessor extends WorkerHost {
   async process(job: Job<{ user: User }>): Promise<void> {
     switch (job.name) {
       case RESET_PASSWORD_CONFIRMATION_JOB:
-        this.logger.debug(
-          'Start reset password confirmation email sending...',
-        );
+        this.logger.debug('Start reset password confirmation email sending...');
         await this.mailService.sendResetPasswordConfirmation(job.data.user);
         this.logger.debug('Reset password confirmation email sent.');
         break;

@@ -33,8 +33,8 @@ export class Supplier {
   @Column({ name: 'pick_up_address' })
   pickUpAddress: string;
 
-  @Column({ name: 'supplier_contact_person_id' })
-  pickupContactPersonId: number;
+  @Column({ name: 'supplier_contact_person_id', nullable: true })
+  pickupContactPersonId: number | null;
 
   @ManyToOne(() => SupplierContactPerson, (person) => person.id)
   @JoinColumn({ name: 'supplier_contact_person_id' })

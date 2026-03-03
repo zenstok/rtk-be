@@ -44,49 +44,59 @@ export class CreateCustomerOfferStockExitDto {
   @IsString()
   productLocalization: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  observations: string;
+  @IsOptional()
+  observations?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  declarationOfConformityNumber: string;
+  @IsOptional()
+  declarationOfConformityNumber?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsDate()
+  @IsOptional()
   @Type(() => Date)
-  declarationOfConformityDate: Date;
+  declarationOfConformityDate?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  handoverReceptionReportNumber: string;
+  @IsOptional()
+  handoverReceptionReportNumber?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsDate()
+  @IsOptional()
   @Type(() => Date)
-  handoverReceptionReportDate: Date;
+  handoverReceptionReportDate?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  warrantyQualityCertificateNumber: string;
+  @IsOptional()
+  warrantyQualityCertificateNumber?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsDate()
+  @IsOptional()
   @Type(() => Date)
-  warrantyQualityCertificateDate: Date;
+  warrantyQualityCertificateDate?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  warrantyStatus: string;
+  @IsOptional()
+  warrantyStatus?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsDate()
+  @IsOptional()
   @Type(() => Date)
-  warrantyExpirationDate: Date;
+  warrantyExpirationDate?: Date;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsBoolean()
-  physicallyDelivered: boolean;
+  @IsOptional()
+  physicallyDelivered?: boolean;
 
   @ApiProperty({ required: false })
   @IsString()

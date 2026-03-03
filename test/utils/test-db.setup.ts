@@ -18,7 +18,9 @@ export async function startTestDb(): Promise<TestDbConfig> {
       POSTGRES_PASSWORD: 'rtk_password',
     })
     .withExposedPorts(5432)
-    .withWaitStrategy(Wait.forLogMessage('database system is ready to accept connections', 2))
+    .withWaitStrategy(
+      Wait.forLogMessage('database system is ready to accept connections', 2),
+    )
     .start();
 
   return {

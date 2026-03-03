@@ -5,15 +5,18 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  ParseIntPipe,
   Query,
+  Header,
 } from '@nestjs/common';
 import { CustomerOfferService } from './customer-offer.service';
 import { CreateCustomerOfferDto } from './dto/create-customer-offer.dto';
 import { UpdateCustomerOfferDto } from './dto/update-customer-offer.dto';
 import { CreateCustomerOfferStockExitDto } from './dto/create-customer-offer-stock-exit.dto';
-import { FindDto } from '../../utils/dtos/find.dto';
+import { ReserveCustomerOfferStockEntryDto } from './dto/reserve-customer-offer-stock-entry.dto';
+import { FindCustomerOfferDto } from './dto/find-customer-offer.dto';
 import { UpdateCustomerOfferStatusDto } from './dto/update-customer-offer-status.dto';
+import { FindDto } from '../../utils/dtos/find.dto';
 
 @Controller('customer-offer')
 export class CustomerOfferController {
@@ -44,22 +47,28 @@ export class CustomerOfferController {
   }
 
   @Get(':id/download')
+  @Header('Content-Type', 'application/pdf')
   download(@Param('id') id: number) {
-    //TODO
-    //find file id of customer offer pdf file, download
-    //maybe we dont need this and we use file.controller@download directly
+    return this.customerOfferService.download(id);
   }
 
   @Get(':id/download-confirmed-customer-order')
-  downloadConfirmedCustomerOrder(@Param('id') id: number) {
-    //TODO
-    //find file id of customer order file, download
-    //maybe we dont need this and we use file.controller@download directly
+  downloadConfirmedCustomerOrder(@Param('id', ParseIntPipe) id: number) {
+    return this.customerOfferService.downloadConfirmedCustomerOrder(id);
   }
 
   @Get()
-  findAll(@Query() dto: FindDto) {
+  findAll(@Query() dto: FindCustomerOfferDto) {
     return this.customerOfferService.findAll(dto);
+  }
+
+  @Get('by-price-analysis-id/:priceAnalysisId')
+  findLatestByPriceAnalysisId(
+    @Param('priceAnalysisId') priceAnalysisId: number,
+  ) {
+    return this.customerOfferService.findLatestByPriceAnalysisId(
+      priceAnalysisId,
+    );
   }
 
   @Get(':id/products')
@@ -102,5 +111,21 @@ export class CustomerOfferController {
     @Body() dto: CreateCustomerOfferStockExitDto,
   ) {
     return this.customerOfferService.createStockExit(id, dto);
+  }
+
+  @Post(':id/reserve-stock-entry')
+  reserveStockEntry(
+    @Param('id') id: number,
+    @Body() dto: ReserveCustomerOfferStockEntryDto,
+  ) {
+    return this.customerOfferService.reserveStockEntry(id, dto);
+  }
+
+  @Post(':id/unreserve-stock-entry')
+  unreserveStockEntry(
+    @Param('id') id: number,
+    @Body() dto: ReserveCustomerOfferStockEntryDto,
+  ) {
+    return this.customerOfferService.unreserveStockEntry(id, dto);
   }
 }

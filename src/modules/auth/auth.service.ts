@@ -13,6 +13,7 @@ import { AuthRefreshTokenService } from './auth-refresh-token.service';
 import { MailService } from '../mail/mail.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ConfirmResetPasswordDto } from './dto/confirm-reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { User } from '../user/entities/user.entity';
 
 export const BCRYPT_SALT_ROUNDS = 12;
@@ -90,7 +91,7 @@ export class AuthService {
 
   async sendResetPasswordConfirmation(dto: ResetPasswordDto): Promise<string> {
     const message =
-      "If your email address is found in our system, a reset confirmation email has been sent to it.";
+      'If your email address is found in our system, a reset confirmation email has been sent to it.';
     const user = await this.userRepository.findOneBy({ email: dto.email });
     if (!user) {
       return message;
@@ -122,5 +123,28 @@ export class AuthService {
     await this.cacheManager.del(data.email);
 
     return 'Password reset successfully';
+  }
+
+  async changePassword(
+    userId: number,
+    dto: ChangePasswordDto,
+  ): Promise<string> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new BadRequestException('Utilizatorul nu a fost gasit');
+    }
+
+    const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isMatch) {
+      throw new BadRequestException('Parola curenta este incorecta');
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      dto.newPassword,
+      BCRYPT_SALT_ROUNDS,
+    );
+    await this.userRepository.update(userId, { password: hashedPassword });
+
+    return 'Parola a fost actualizata cu succes';
   }
 }
